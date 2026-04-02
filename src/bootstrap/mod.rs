@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 SenAgentOS
+// Licensed under the MIT License.
+//
+// Bootstrap module — global session state management.
+//
+// Mirrors claude-code's `bootstrap/state.ts`: a single process-wide state
+// struct that tracks session identity, cost counters, telemetry handles,
+// model usage, and ephemeral per-session flags. The state is initialised
+// once at startup and accessed through thread-safe accessor functions.
+
+pub mod state;
+
+pub use state::{
+    BootstrapState, SessionState, get_state, init_state, reset_state,
+    get_session_id, get_project_root, get_cwd, set_cwd,
+};
