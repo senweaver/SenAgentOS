@@ -21,10 +21,7 @@ impl ListenTool {
         ensure_dirs(); // idempotent
         let recordings = recordings_dir();
 
-        Self {
-            config,
-            recordings,
-        }
+        Self { config, recordings }
     }
 
     /// Record audio using arecord (ALSA)
@@ -68,8 +65,7 @@ impl ListenTool {
         let model = &self.config.audio.whisper_model;
 
         // whisper.cpp model path — look up in robot whisper_models_dir
-        let model_path = whisper_models_dir()
-            .join(format!("ggml-{}.bin", model));
+        let model_path = whisper_models_dir().join(format!("ggml-{}.bin", model));
 
         // Run whisper.cpp
         let output = tokio::process::Command::new(whisper_path)

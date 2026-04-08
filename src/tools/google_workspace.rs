@@ -211,7 +211,7 @@ impl Tool for GoogleWorkspaceTool {
                         success: false,
                         output: String::new(),
                         error: Some("'sub_resource' must be a string".into()),
-                    })
+                    });
                 }
             };
             if !s
@@ -323,7 +323,7 @@ impl Tool for GoogleWorkspaceTool {
                         success: false,
                         output: String::new(),
                         error: Some("'format' must be a string".into()),
-                    })
+                    });
                 }
             };
             match format {
@@ -351,7 +351,7 @@ impl Tool for GoogleWorkspaceTool {
                         success: false,
                         output: String::new(),
                         error: Some("'page_all' must be a boolean".into()),
-                    })
+                    });
                 }
             },
             None => false,
@@ -364,7 +364,7 @@ impl Tool for GoogleWorkspaceTool {
                         success: false,
                         output: String::new(),
                         error: Some("'page_limit' must be a non-negative integer".into()),
-                    })
+                    });
                 }
             },
             None => None,
@@ -458,7 +458,8 @@ impl Tool for GoogleWorkspaceTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!(
-                    "gws command timed out after {}s and was killed", self.timeout_secs
+                    "gws command timed out after {}s and was killed",
+                    self.timeout_secs
                 )),
             }),
         }
@@ -557,11 +558,13 @@ mod tests {
             .await
             .expect("disallowed service should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("not in the allowed"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("not in the allowed")
+        );
     }
 
     #[tokio::test]
@@ -585,11 +588,13 @@ mod tests {
             .await
             .expect("shell injection should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("Invalid characters"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("Invalid characters")
+        );
     }
 
     #[tokio::test]
@@ -605,11 +610,13 @@ mod tests {
             .await
             .expect("shell injection should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("Invalid characters"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("Invalid characters")
+        );
     }
 
     #[tokio::test]
@@ -626,11 +633,13 @@ mod tests {
             .await
             .expect("invalid format should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("Invalid format"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("Invalid format")
+        );
     }
 
     #[tokio::test]
@@ -647,11 +656,13 @@ mod tests {
             .await
             .expect("wrong type params should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("'params' must be an object"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("'params' must be an object")
+        );
     }
 
     #[tokio::test]
@@ -668,11 +679,13 @@ mod tests {
             .await
             .expect("wrong type body should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("'body' must be an object"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("'body' must be an object")
+        );
     }
 
     #[tokio::test]
@@ -689,11 +702,13 @@ mod tests {
             .await
             .expect("wrong type page_all should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("'page_all' must be a boolean"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("'page_all' must be a boolean")
+        );
     }
 
     #[tokio::test]
@@ -710,11 +725,13 @@ mod tests {
             .await
             .expect("wrong type page_limit should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("'page_limit' must be a non-negative integer"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("'page_limit' must be a non-negative integer")
+        );
     }
 
     #[tokio::test]
@@ -731,11 +748,13 @@ mod tests {
             .await
             .expect("wrong type sub_resource should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("'sub_resource' must be a string"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("'sub_resource' must be a string")
+        );
     }
 
     #[tokio::test]
@@ -866,11 +885,13 @@ mod tests {
             .expect("disallowed operation should return a result");
 
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("allowed operations list"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("allowed operations list")
+        );
     }
 
     #[tokio::test]
@@ -903,11 +924,13 @@ mod tests {
             .expect("unlisted sub_resource should return a result");
 
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("allowed operations list"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("allowed operations list")
+        );
     }
 
     // ── cmd_args ordering ────────────────────────────────────

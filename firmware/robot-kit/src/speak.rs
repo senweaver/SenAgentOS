@@ -31,8 +31,7 @@ impl SpeakTool {
         let speaker_device = &self.config.audio.speaker_device;
 
         // Model path — look up in robot voice_models_dir
-        let model_path = voice_models_dir()
-            .join(format!("{}.onnx", voice));
+        let model_path = voice_models_dir().join(format!("{}.onnx", voice));
 
         // Adjust text based on emotion (simple SSML-like modifications)
         let processed_text = match emotion {

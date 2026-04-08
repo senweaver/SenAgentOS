@@ -7,9 +7,9 @@
 //! crate. This ensures manifests haven't been tampered with and come from
 //! trusted sources.
 
-use ring::digest::{digest, SHA256};
+use ring::digest::{SHA256, digest};
 use ring::rand::SystemRandom;
-use ring::signature::{Ed25519KeyPair, KeyPair, UnparsedPublicKey, ED25519};
+use ring::signature::{ED25519, Ed25519KeyPair, KeyPair, UnparsedPublicKey};
 use serde::{Deserialize, Serialize};
 
 /// A signed manifest with content hash and cryptographic signature.
@@ -71,7 +71,10 @@ impl ManifestSigner {
     }
 
     /// Create a signer from existing PKCS#8 DER bytes.
-    pub fn from_pkcs8(pkcs8_der: &[u8], signer_id: impl Into<String>) -> Result<Self, ManifestSignError> {
+    pub fn from_pkcs8(
+        pkcs8_der: &[u8],
+        signer_id: impl Into<String>,
+    ) -> Result<Self, ManifestSignError> {
         let key_pair = Ed25519KeyPair::from_pkcs8(pkcs8_der)
             .map_err(|e| ManifestSignError::KeyGeneration(e.to_string()))?;
         Ok(Self {
@@ -121,8 +124,8 @@ impl SignedManifest {
 
         let pub_key_bytes = hex::decode(&self.signer_public_key)
             .map_err(|_| ManifestSignError::InvalidPublicKey)?;
-        let sig_bytes = hex::decode(&self.signature)
-            .map_err(|_| ManifestSignError::InvalidSignature)?;
+        let sig_bytes =
+            hex::decode(&self.signature).map_err(|_| ManifestSignError::InvalidSignature)?;
 
         let public_key = UnparsedPublicKey::new(&ED25519, &pub_key_bytes);
         public_key

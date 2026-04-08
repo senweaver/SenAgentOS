@@ -9,8 +9,8 @@
 //! - Failed tasks are automatically re-queued with retry limits
 //! - Supports priority levels and deadline-based ordering
 
-use std::collections::{BinaryHeap, HashMap, BTreeMap};
 use std::cmp::Ordering;
+use std::collections::{BTreeMap, BinaryHeap, HashMap};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -335,14 +335,14 @@ impl TaskQueue {
                     priority: task.priority,
                     submitted_at: task.submitted_at,
                 };
-                
+
                 // Re-insert into capability index
                 self.capability_index
                     .write()
                     .entry(task.required_capability.clone())
                     .or_default()
                     .push(prioritized.clone());
-                
+
                 self.queue.write().push(prioritized);
             } else {
                 task.status = TaskStatus::Failed;
@@ -441,9 +441,7 @@ impl TaskQueue {
     pub fn status_summary(&self) -> HashMap<String, usize> {
         let mut summary = HashMap::new();
         for task in self.tasks.read().values() {
-            *summary
-                .entry(format!("{:?}", task.status))
-                .or_insert(0) += 1;
+            *summary.entry(format!("{:?}", task.status)).or_insert(0) += 1;
         }
         summary
     }
@@ -457,11 +455,12 @@ impl TaskQueue {
         tasks.retain(|_, t| {
             if matches!(
                 t.status,
-                TaskStatus::Completed | TaskStatus::Failed | TaskStatus::Cancelled | TaskStatus::Expired
+                TaskStatus::Completed
+                    | TaskStatus::Failed
+                    | TaskStatus::Cancelled
+                    | TaskStatus::Expired
             ) {
-                t.finished_at
-                    .map(|f| f > cutoff)
-                    .unwrap_or(true)
+                t.finished_at.map(|f| f > cutoff).unwrap_or(true)
             } else {
                 true
             }
@@ -563,8 +562,7 @@ mod tests {
                 .with_priority(TaskPriority::Critical),
         );
         queue.submit(
-            Task::new("Normal", "normal task", "cap", "user")
-                .with_priority(TaskPriority::Normal),
+            Task::new("Normal", "normal task", "cap", "user").with_priority(TaskPriority::Normal),
         );
 
         let first = queue.claim("a1", "cap").unwrap();
@@ -592,8 +590,7 @@ mod tests {
     #[test]
     fn fail_and_retry() {
         let queue = TaskQueue::new();
-        let task_id =
-            queue.submit(Task::new("Test", "Do", "cap", "user").with_max_retries(1));
+        let task_id = queue.submit(Task::new("Test", "Do", "cap", "user").with_max_retries(1));
         queue.claim("agent-1", "cap");
 
         assert!(queue.fail(&task_id, "oops"));

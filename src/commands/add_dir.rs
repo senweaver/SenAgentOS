@@ -9,7 +9,9 @@ use super::registry::{CommandContext, CommandResult};
 
 pub async fn handle(ctx: CommandContext) -> CommandResult {
     if ctx.args.is_empty() {
-        return CommandResult::err("Usage: /add-dir <path> — add a directory to the working context");
+        return CommandResult::err(
+            "Usage: /add-dir <path> — add a directory to the working context",
+        );
     }
     let dir = &ctx.args[0];
     let path = std::path::Path::new(dir);

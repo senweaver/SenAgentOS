@@ -7,11 +7,11 @@
 //! tool selection and improve tool-calling behavior over time.
 
 use chrono::{DateTime, Utc};
+use parking_lot::RwLock;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
-use parking_lot::RwLock;
 
 /// Configuration for skill/tool evolution tracking.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -30,9 +30,15 @@ pub struct SkillEvolutionConfig {
     pub min_executions: usize,
 }
 
-fn default_max_history() -> usize { 100 }
-fn default_decay_factor() -> f64 { 0.95 }
-fn default_min_executions() -> usize { 3 }
+fn default_max_history() -> usize {
+    100
+}
+fn default_decay_factor() -> f64 {
+    0.95
+}
+fn default_min_executions() -> usize {
+    3
+}
 
 impl Default for SkillEvolutionConfig {
     fn default() -> Self {
@@ -98,7 +104,8 @@ pub fn ensure_global_engine(config: &SkillEvolutionConfig) -> &'static SkillEvol
 
 /// Get the global skill evolution engine, creating with defaults if needed.
 pub fn global_engine() -> &'static SkillEvolutionEngine {
-    GLOBAL_SKILL_EVOLUTION.get_or_init(|| SkillEvolutionEngine::new(&SkillEvolutionConfig::default()))
+    GLOBAL_SKILL_EVOLUTION
+        .get_or_init(|| SkillEvolutionEngine::new(&SkillEvolutionConfig::default()))
 }
 
 impl SkillEvolutionEngine {
@@ -154,8 +161,7 @@ impl SkillEvolutionEngine {
         let success_rate = successes as f64 / total as f64;
 
         let avg_duration = history.iter().map(|e| e.duration_ms as f64).sum::<f64>() / total as f64;
-        let avg_reward =
-            history.iter().map(|e| e.reward_contribution).sum::<f64>() / total as f64;
+        let avg_reward = history.iter().map(|e| e.reward_contribution).sum::<f64>() / total as f64;
 
         let mut error_counts: HashMap<String, u32> = HashMap::new();
         for exec in history.iter() {
@@ -179,10 +185,7 @@ impl SkillEvolutionEngine {
             .into_iter()
             .map(|(ctx, (sum, count))| (ctx, sum / count as f64))
             .collect();
-        best_contexts.sort_by(|a, b| {
-            b.1.partial_cmp(&a.1)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        best_contexts.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         best_contexts.truncate(3);
 
         let history_vec: Vec<_> = history.iter().cloned().collect();
@@ -208,15 +211,9 @@ impl SkillEvolutionEngine {
         }
 
         let mid = history.len() / 2;
-        let first_half_rate = history[..mid]
-            .iter()
-            .filter(|e| e.success)
-            .count() as f64
-            / mid as f64;
-        let second_half_rate = history[mid..]
-            .iter()
-            .filter(|e| e.success)
-            .count() as f64
+        let first_half_rate =
+            history[..mid].iter().filter(|e| e.success).count() as f64 / mid as f64;
+        let second_half_rate = history[mid..].iter().filter(|e| e.success).count() as f64
             / (history.len() - mid) as f64;
 
         let diff = second_half_rate - first_half_rate;
@@ -255,8 +252,8 @@ impl SkillEvolutionEngine {
                     .collect();
 
                 let (success_rate, avg_reward) = if context_execs.is_empty() {
-                    let rate = history.iter().filter(|e| e.success).count() as f64
-                        / history.len() as f64;
+                    let rate =
+                        history.iter().filter(|e| e.success).count() as f64 / history.len() as f64;
                     let avg = history.iter().map(|e| e.reward_contribution).sum::<f64>()
                         / history.len() as f64;
                     (rate, avg)
@@ -274,11 +271,20 @@ impl SkillEvolutionEngine {
                 let confidence = success_rate * 0.6 + (avg_reward + 1.0) / 2.0 * 0.4;
 
                 let reason = if success_rate > 0.8 {
-                    format!("High success rate ({:.0}%) in this context.", success_rate * 100.0)
+                    format!(
+                        "High success rate ({:.0}%) in this context.",
+                        success_rate * 100.0
+                    )
                 } else if success_rate < 0.4 {
-                    format!("Low success rate ({:.0}%), consider alternatives.", success_rate * 100.0)
+                    format!(
+                        "Low success rate ({:.0}%), consider alternatives.",
+                        success_rate * 100.0
+                    )
                 } else {
-                    format!("Moderate performance ({:.0}% success).", success_rate * 100.0)
+                    format!(
+                        "Moderate performance ({:.0}% success).",
+                        success_rate * 100.0
+                    )
                 };
 
                 recommendations.push(ToolRecommendation {
@@ -393,10 +399,7 @@ impl SkillEvolutionEngine {
             .into_iter()
             .map(|(ctx, (sum, count))| (ctx, sum / count as f64))
             .collect();
-        best_contexts.sort_by(|a, b| {
-            b.1.partial_cmp(&a.1)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        best_contexts.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         ToolPerformance {
             tool_name: tool_name.to_string(),
@@ -406,10 +409,7 @@ impl SkillEvolutionEngine {
             avg_duration_ms: history.iter().map(|e| e.duration_ms as f64).sum::<f64>()
                 / total as f64,
             success_rate,
-            avg_reward_contribution: history
-                .iter()
-                .map(|e| e.reward_contribution)
-                .sum::<f64>()
+            avg_reward_contribution: history.iter().map(|e| e.reward_contribution).sum::<f64>()
                 / total as f64,
             common_errors,
             best_contexts,
@@ -470,10 +470,7 @@ mod tests {
             engine.record_execution("bad_tool", false, 500, Some("error"), "code", -0.5);
         }
 
-        let recs = engine.recommend_tools(
-            &["good_tool".into(), "bad_tool".into()],
-            "code",
-        );
+        let recs = engine.recommend_tools(&["good_tool".into(), "bad_tool".into()], "code");
         assert_eq!(recs.len(), 2);
         assert!(recs[0].confidence > recs[1].confidence);
         assert_eq!(recs[0].tool_name, "good_tool");
@@ -488,7 +485,14 @@ mod tests {
         };
         let engine = SkillEvolutionEngine::new(&config);
 
-        engine.record_execution("flaky_tool", false, 100, Some("parse error"), "general", -0.5);
+        engine.record_execution(
+            "flaky_tool",
+            false,
+            100,
+            Some("parse error"),
+            "general",
+            -0.5,
+        );
         engine.record_execution("flaky_tool", false, 100, Some("timeout"), "general", -0.5);
         engine.record_execution("flaky_tool", true, 50, None, "general", 0.2);
 

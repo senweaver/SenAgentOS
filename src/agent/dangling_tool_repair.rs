@@ -16,9 +16,7 @@ use crate::providers::traits::{ConversationMessage, ToolResultMessage};
 ///
 /// Returns the repaired message list. If no repairs needed, returns the input
 /// unchanged.
-pub fn repair_dangling_tool_calls(
-    messages: Vec<ConversationMessage>,
-) -> Vec<ConversationMessage> {
+pub fn repair_dangling_tool_calls(messages: Vec<ConversationMessage>) -> Vec<ConversationMessage> {
     let mut answered_ids: HashSet<String> = HashSet::new();
     for msg in &messages {
         if let ConversationMessage::ToolResults(results) = msg {
@@ -162,16 +160,14 @@ mod tests {
 
     #[test]
     fn test_multiple_dangling_calls() {
-        let messages = vec![
-            ConversationMessage::AssistantToolCalls {
-                text: None,
-                tool_calls: vec![
-                    make_tool_call("tc-1", "shell"),
-                    make_tool_call("tc-2", "file_read"),
-                ],
-                reasoning_content: None,
-            },
-        ];
+        let messages = vec![ConversationMessage::AssistantToolCalls {
+            text: None,
+            tool_calls: vec![
+                make_tool_call("tc-1", "shell"),
+                make_tool_call("tc-2", "file_read"),
+            ],
+            reasoning_content: None,
+        }];
 
         assert!(has_dangling_tool_calls(&messages));
 

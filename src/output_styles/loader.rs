@@ -10,10 +10,7 @@ use super::types::{OutputStyle, OutputStyleSource};
 use crate::constants::output_styles::builtin_output_styles;
 
 /// Load output styles from all sources: builtin + project + user.
-pub async fn load_output_styles(
-    project_dir: &Path,
-    user_home: Option<&Path>,
-) -> Vec<OutputStyle> {
+pub async fn load_output_styles(project_dir: &Path, user_home: Option<&Path>) -> Vec<OutputStyle> {
     let mut styles: Vec<OutputStyle> = builtin_output_styles()
         .into_iter()
         .map(|def| OutputStyle {
@@ -28,7 +25,9 @@ pub async fn load_output_styles(
     // Load project-level styles from .senagent/output-styles/
     let project_styles_dir = project_dir.join(".senagent").join("output-styles");
     if project_styles_dir.is_dir() {
-        if let Ok(entries) = load_styles_from_dir(&project_styles_dir, OutputStyleSource::Project).await {
+        if let Ok(entries) =
+            load_styles_from_dir(&project_styles_dir, OutputStyleSource::Project).await
+        {
             styles.extend(entries);
         }
     }
@@ -37,7 +36,9 @@ pub async fn load_output_styles(
     if let Some(home) = user_home {
         let user_styles_dir = home.join(".senagent").join("output-styles");
         if user_styles_dir.is_dir() {
-            if let Ok(entries) = load_styles_from_dir(&user_styles_dir, OutputStyleSource::User).await {
+            if let Ok(entries) =
+                load_styles_from_dir(&user_styles_dir, OutputStyleSource::User).await
+            {
                 styles.extend(entries);
             }
         }
@@ -46,7 +47,10 @@ pub async fn load_output_styles(
     styles
 }
 
-async fn load_styles_from_dir(dir: &Path, source: OutputStyleSource) -> anyhow::Result<Vec<OutputStyle>> {
+async fn load_styles_from_dir(
+    dir: &Path,
+    source: OutputStyleSource,
+) -> anyhow::Result<Vec<OutputStyle>> {
     let mut styles = Vec::new();
     let mut entries = tokio::fs::read_dir(dir).await?;
     while let Some(entry) = entries.next_entry().await? {

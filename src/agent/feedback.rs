@@ -8,11 +8,11 @@
 //! policy adjustment.
 
 use chrono::{DateTime, Utc};
+use parking_lot::RwLock;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::sync::Arc;
-use parking_lot::RwLock;
 
 /// Configuration for the feedback collection system.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -37,11 +37,21 @@ pub struct FeedbackConfig {
     pub next_state_weight: f64,
 }
 
-fn default_max_entries() -> usize { 1000 }
-fn default_judge_weight() -> f64 { 0.35 }
-fn default_user_weight() -> f64 { 0.30 }
-fn default_tool_weight() -> f64 { 0.20 }
-fn default_next_state_weight() -> f64 { 0.15 }
+fn default_max_entries() -> usize {
+    1000
+}
+fn default_judge_weight() -> f64 {
+    0.35
+}
+fn default_user_weight() -> f64 {
+    0.30
+}
+fn default_tool_weight() -> f64 {
+    0.20
+}
+fn default_next_state_weight() -> f64 {
+    0.15
+}
 
 impl Default for FeedbackConfig {
     fn default() -> Self {
@@ -147,24 +157,43 @@ pub fn detect_next_state_signal(
     let lower = next_user_message.to_lowercase();
 
     let satisfaction_phrases = [
-        "thank", "thanks", "perfect", "great", "awesome", "exactly",
-        "that's right", "good job", "well done", "excellent",
+        "thank",
+        "thanks",
+        "perfect",
+        "great",
+        "awesome",
+        "exactly",
+        "that's right",
+        "good job",
+        "well done",
+        "excellent",
     ];
     if satisfaction_phrases.iter().any(|p| lower.contains(p)) {
         return NextStateSignal::Satisfaction;
     }
 
     let frustration_phrases = [
-        "wrong", "that's not", "no,", "incorrect", "doesn't work",
-        "still broken", "not what i", "useless", "terrible",
+        "wrong",
+        "that's not",
+        "no,",
+        "incorrect",
+        "doesn't work",
+        "still broken",
+        "not what i",
+        "useless",
+        "terrible",
     ];
     if frustration_phrases.iter().any(|p| lower.contains(p)) {
         return NextStateSignal::Frustration;
     }
 
     let correction_phrases = [
-        "actually,", "i meant", "let me clarify", "correction:",
-        "no, i want", "that's incorrect",
+        "actually,",
+        "i meant",
+        "let me clarify",
+        "correction:",
+        "no, i want",
+        "that's incorrect",
     ];
     if correction_phrases.iter().any(|p| lower.contains(p)) {
         return NextStateSignal::Correction;
@@ -387,20 +416,10 @@ mod tests {
         };
         let collector = FeedbackCollector::new(&config);
 
-        let r1 = collector.record(
-            "s1",
-            0,
-            "model-a",
-            vec![FeedbackSignal::JudgeScore(0.8)],
-        );
+        let r1 = collector.record("s1", 0, "model-a", vec![FeedbackSignal::JudgeScore(0.8)]);
         assert!(r1 > 0.0);
 
-        let r2 = collector.record(
-            "s1",
-            1,
-            "model-a",
-            vec![FeedbackSignal::JudgeScore(-0.5)],
-        );
+        let r2 = collector.record("s1", 1, "model-a", vec![FeedbackSignal::JudgeScore(-0.5)]);
         assert!(r2 < 0.0);
 
         let avg = collector.recent_average(10);
@@ -430,7 +449,10 @@ mod tests {
                 },
             ],
         );
-        assert!(reward > 0.5, "positive signals should yield high reward: {reward}");
+        assert!(
+            reward > 0.5,
+            "positive signals should yield high reward: {reward}"
+        );
     }
 
     #[test]

@@ -10,8 +10,8 @@
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct TokenBudgetConfig {
@@ -119,8 +119,7 @@ impl TokenBudgetManager {
 
     fn compute_allocation(config: &TokenBudgetConfig) -> BudgetAllocation {
         let total = config.context_window;
-        let system_prompt_budget =
-            (total as f64 * config.system_prompt_ratio as f64) as usize;
+        let system_prompt_budget = (total as f64 * config.system_prompt_ratio as f64) as usize;
         let output_budget = (total as f64 * config.output_ratio as f64) as usize;
         let rag_budget = config.max_rag_tokens.min(total / 10);
         let history_budget = total
@@ -152,15 +151,10 @@ impl TokenBudgetManager {
     }
 
     /// Check current budget status given system prompt and history sizes.
-    pub fn check_status(
-        &self,
-        system_prompt_tokens: usize,
-        history_tokens: usize,
-    ) -> BudgetStatus {
-        let available = self
-            .allocation
-            .history_budget
-            .saturating_sub(system_prompt_tokens.saturating_sub(self.allocation.system_prompt_budget));
+    pub fn check_status(&self, system_prompt_tokens: usize, history_tokens: usize) -> BudgetStatus {
+        let available = self.allocation.history_budget.saturating_sub(
+            system_prompt_tokens.saturating_sub(self.allocation.system_prompt_budget),
+        );
 
         let utilization = if available > 0 {
             history_tokens as f64 / available as f64
@@ -183,13 +177,16 @@ impl TokenBudgetManager {
 
     /// Record token savings from compression.
     pub fn record_savings(&self, tokens_saved: usize) {
-        self.cumulative_saved.fetch_add(tokens_saved, Ordering::Relaxed);
+        self.cumulative_saved
+            .fetch_add(tokens_saved, Ordering::Relaxed);
     }
 
     /// Record API token usage.
     pub fn record_usage(&self, input_tokens: usize, output_tokens: usize) {
-        self.cumulative_input.fetch_add(input_tokens, Ordering::Relaxed);
-        self.cumulative_output.fetch_add(output_tokens, Ordering::Relaxed);
+        self.cumulative_input
+            .fetch_add(input_tokens, Ordering::Relaxed);
+        self.cumulative_output
+            .fetch_add(output_tokens, Ordering::Relaxed);
     }
 
     /// Get the maximum chars allowed for a tool result.
@@ -218,11 +215,7 @@ impl TokenBudgetManager {
     }
 
     /// Suggest how many messages to keep based on remaining budget.
-    pub fn suggest_max_messages(
-        &self,
-        current_tokens: usize,
-        message_count: usize,
-    ) -> usize {
+    pub fn suggest_max_messages(&self, current_tokens: usize, message_count: usize) -> usize {
         if message_count == 0 || current_tokens == 0 {
             return message_count;
         }
@@ -277,7 +270,10 @@ mod tests {
         assert!(alloc.output_budget > 0);
         assert!(alloc.history_budget > 0);
         assert_eq!(
-            alloc.system_prompt_budget + alloc.output_budget + alloc.history_budget + alloc.rag_budget,
+            alloc.system_prompt_budget
+                + alloc.output_budget
+                + alloc.history_budget
+                + alloc.rag_budget,
             alloc.total_tokens
         );
     }
@@ -286,7 +282,10 @@ mod tests {
     fn token_estimation() {
         assert_eq!(TokenBudgetManager::estimate_tokens(""), 4);
         assert_eq!(TokenBudgetManager::estimate_tokens("hello"), 6);
-        assert_eq!(TokenBudgetManager::estimate_tokens("a".repeat(100).as_str()), 29);
+        assert_eq!(
+            TokenBudgetManager::estimate_tokens("a".repeat(100).as_str()),
+            29
+        );
     }
 
     #[test]
@@ -322,10 +321,7 @@ mod tests {
         let manager = TokenBudgetManager::new(Default::default());
         manager.record_savings(100);
         manager.record_savings(200);
-        assert_eq!(
-            manager.cumulative_saved.load(Ordering::Relaxed),
-            300
-        );
+        assert_eq!(manager.cumulative_saved.load(Ordering::Relaxed), 300);
     }
 
     #[test]

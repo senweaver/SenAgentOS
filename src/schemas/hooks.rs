@@ -30,7 +30,9 @@ impl HookSchema {
             events: vec![
                 HookEventSchema {
                     event: "pre_tool_use".to_string(),
-                    description: "Fired before a tool is executed. Can modify input or block execution.".to_string(),
+                    description:
+                        "Fired before a tool is executed. Can modify input or block execution."
+                            .to_string(),
                     payload_schema: serde_json::json!({
                         "type": "object",
                         "properties": {
@@ -131,16 +133,12 @@ pub fn validate_hook_config(
 
     // Validate filter usage
     if config.get("filter").is_some() && !event_schema.supports_filter {
-        errors.push(format!(
-            "Event '{event}' does not support filtering"
-        ));
+        errors.push(format!("Event '{event}' does not support filtering"));
     }
 
     // Validate mutation usage
     if config.get("mutate").is_some() && !event_schema.supports_mutation {
-        errors.push(format!(
-            "Event '{event}' does not support mutation"
-        ));
+        errors.push(format!("Event '{event}' does not support mutation"));
     }
 
     if errors.is_empty() {

@@ -252,7 +252,11 @@ impl Event {
     /// Create a new event with the current timestamp.
     pub fn new(source: impl Into<String>, target: EventTarget, payload: EventPayload) -> Self {
         Self {
-            id: format!("evt-{}-{}", Utc::now().timestamp_millis(), uuid::Uuid::new_v4().to_string()[..8].to_string()),
+            id: format!(
+                "evt-{}-{}",
+                Utc::now().timestamp_millis(),
+                uuid::Uuid::new_v4().to_string()[..8].to_string()
+            ),
             source: source.into(),
             target,
             payload,
@@ -332,7 +336,11 @@ impl Event {
     }
 
     /// Create a system event.
-    pub fn system(source: impl Into<String>, category: SystemCategory, message: impl Into<String>) -> Self {
+    pub fn system(
+        source: impl Into<String>,
+        category: SystemCategory,
+        message: impl Into<String>,
+    ) -> Self {
         Self::new(
             source,
             EventTarget::System,
@@ -352,17 +360,27 @@ impl Event {
             self.target,
             match &self.payload {
                 EventPayload::Lifecycle { phase, error } => {
-                    let err_str = error.as_ref().map(|e| format!(" (error: {})", e)).unwrap_or_default();
+                    let err_str = error
+                        .as_ref()
+                        .map(|e| format!(" (error: {})", e))
+                        .unwrap_or_default();
                     format!("lifecycle: {:?}{}", phase, err_str)
                 }
                 EventPayload::System { category, message } => {
                     format!("system [{:?}]: {}", category, message)
                 }
                 EventPayload::Memory { operation, key } => {
-                    let key_str = key.as_ref().map(|k| format!(" key={}", k)).unwrap_or_default();
+                    let key_str = key
+                        .as_ref()
+                        .map(|k| format!(" key={}", k))
+                        .unwrap_or_default();
                     format!("memory: {:?}{}", operation, key_str)
                 }
-                EventPayload::Tool { name, result, duration_ms } => {
+                EventPayload::Tool {
+                    name,
+                    result,
+                    duration_ms,
+                } => {
                     format!("tool {}: {:?} ({}ms)", name, result, duration_ms)
                 }
                 EventPayload::MessageReceived { channel, preview } => {
@@ -371,13 +389,23 @@ impl Event {
                 EventPayload::MessageSent { channel, preview } => {
                     format!("message sent [{}]: {}", channel, preview)
                 }
-                EventPayload::AgentRequest { request_id, capability, .. } => {
+                EventPayload::AgentRequest {
+                    request_id,
+                    capability,
+                    ..
+                } => {
                     format!("agent_request [{}]: capability={}", request_id, capability)
                 }
-                EventPayload::AgentResponse { request_id, success, .. } => {
+                EventPayload::AgentResponse {
+                    request_id,
+                    success,
+                    ..
+                } => {
                     format!("agent_response [{}]: success={}", request_id, success)
                 }
-                EventPayload::TaskDelegation { task_id, action, .. } => {
+                EventPayload::TaskDelegation {
+                    task_id, action, ..
+                } => {
                     format!("task_delegation [{}]: {:?}", task_id, action)
                 }
                 EventPayload::Coordination { action, topic, .. } => {
@@ -464,7 +492,13 @@ mod tests {
 
         assert_eq!(event.source, "test_source");
         assert_eq!(event.target, EventTarget::Broadcast);
-        assert!(matches!(event.payload, EventPayload::Lifecycle { phase: LifecyclePhase::Started, .. }));
+        assert!(matches!(
+            event.payload,
+            EventPayload::Lifecycle {
+                phase: LifecyclePhase::Started,
+                ..
+            }
+        ));
         assert!(!event.id.is_empty());
     }
 

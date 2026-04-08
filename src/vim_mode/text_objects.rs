@@ -22,11 +22,7 @@ pub enum TextObject {
 }
 
 /// Resolve a text object to a (start, end) byte range.
-pub fn resolve_text_object(
-    obj: TextObject,
-    text: &str,
-    cursor: usize,
-) -> Option<(usize, usize)> {
+pub fn resolve_text_object(obj: TextObject, text: &str, cursor: usize) -> Option<(usize, usize)> {
     let chars: Vec<char> = text.chars().collect();
     let char_len = chars.len();
     if char_len == 0 {

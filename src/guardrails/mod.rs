@@ -180,7 +180,12 @@ impl GuardrailsEngine {
             return GuardrailVerdict::allow();
         }
 
-        if self.config.bypass_tools.iter().any(|t| t.eq_ignore_ascii_case(tool_name)) {
+        if self
+            .config
+            .bypass_tools
+            .iter()
+            .any(|t| t.eq_ignore_ascii_case(tool_name))
+        {
             return GuardrailVerdict::allow();
         }
 
@@ -213,7 +218,9 @@ impl GuardrailsEngine {
                 return match rule.policy {
                     GuardrailPolicy::Allow => GuardrailVerdict::allow(),
                     GuardrailPolicy::Deny => GuardrailVerdict::deny(
-                        rule.reason.as_deref().unwrap_or("Blocked by guardrail rule"),
+                        rule.reason
+                            .as_deref()
+                            .unwrap_or("Blocked by guardrail rule"),
                     ),
                     GuardrailPolicy::RequireApproval => GuardrailVerdict::require_approval(
                         rule.reason
@@ -261,7 +268,10 @@ impl GuardrailsEngine {
                 if let Some(calls) = counts.get(tool_name) {
                     let window = Duration::from_secs(rule.window_secs);
                     let now = Instant::now();
-                    let recent = calls.iter().filter(|t| now.duration_since(**t) < window).count();
+                    let recent = calls
+                        .iter()
+                        .filter(|t| now.duration_since(**t) < window)
+                        .count();
                     if recent >= rule.max_calls {
                         return Some(GuardrailVerdict::deny(format!(
                             "Rate limit exceeded: {} calls in {}s (max {})",

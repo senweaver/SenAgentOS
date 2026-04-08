@@ -190,7 +190,10 @@ pub fn create_embedding_provider(
             Box::new(OpenAiEmbedding::new(base_url, key, model, dims))
         }
         other => {
-            tracing::warn!("Unknown embedding provider '{}', falling back to noop (no vector search)", other);
+            tracing::warn!(
+                "Unknown embedding provider '{}', falling back to noop (no vector search)",
+                other
+            );
             Box::new(NoopEmbedding)
         }
     }

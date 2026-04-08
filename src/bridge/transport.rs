@@ -6,7 +6,7 @@
 // Mirrors claude-code-typescript-src`bridge/replBridgeTransport.ts`.
 
 use std::sync::Arc;
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::{RwLock, broadcast};
 
 use super::types::{BridgeStatus, PollConfig};
 
@@ -82,7 +82,10 @@ impl BridgeTransport {
         state.retry_count += 1;
 
         let base = self.poll_config.initial_delay_ms as f64
-            * self.poll_config.backoff_multiplier.powi(state.retry_count as i32 - 1);
+            * self
+                .poll_config
+                .backoff_multiplier
+                .powi(state.retry_count as i32 - 1);
         let capped = base.min(self.poll_config.max_delay_ms as f64);
 
         let jitter_range = capped * self.poll_config.jitter_fraction;

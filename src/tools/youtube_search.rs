@@ -172,10 +172,7 @@ impl YouTubeSearchTool {
                 .and_then(|id| id.get("videoId"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            let title = snippet
-                .get("title")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let title = snippet.get("title").and_then(|v| v.as_str()).unwrap_or("");
             let channel = snippet
                 .get("channelTitle")
                 .and_then(|v| v.as_str())
@@ -279,10 +276,7 @@ impl YouTubeSearchTool {
                 let title = item.get("title").and_then(|v| v.as_str()).unwrap_or("");
                 let video_id = item.get("videoId").and_then(|v| v.as_str()).unwrap_or("");
                 let author = item.get("author").and_then(|v| v.as_str()).unwrap_or("");
-                let views = item
-                    .get("viewCount")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0);
+                let views = item.get("viewCount").and_then(|v| v.as_u64()).unwrap_or(0);
                 let length = item
                     .get("lengthSeconds")
                     .and_then(|v| v.as_u64())

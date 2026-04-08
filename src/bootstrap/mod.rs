@@ -12,6 +12,6 @@
 pub mod state;
 
 pub use state::{
-    BootstrapState, SessionState, get_state, init_state, reset_state,
-    get_session_id, get_project_root, get_cwd, set_cwd,
+    BootstrapState, SessionState, get_cwd, get_project_root, get_session_id, get_state, init_state,
+    reset_state, set_cwd,
 };

@@ -3,8 +3,8 @@
 // Licensed under the MIT License.
 use super::traits::{Tool, ToolResult};
 use crate::memory::Memory;
-use crate::security::policy::ToolOperation;
 use crate::security::SecurityPolicy;
+use crate::security::policy::ToolOperation;
 use async_trait::async_trait;
 use serde_json::json;
 use std::sync::Arc;
@@ -251,11 +251,13 @@ mod tests {
         let tool = MemoryPurgeTool::new(mem.clone(), readonly);
         let result = tool.execute(json!({"namespace": "test"})).await.unwrap();
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("read-only mode"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("read-only mode")
+        );
         assert_eq!(mem.count().await.unwrap(), 1);
     }
 
@@ -272,11 +274,13 @@ mod tests {
         let tool = MemoryPurgeTool::new(mem.clone(), limited);
         let result = tool.execute(json!({"namespace": "test"})).await.unwrap();
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("Rate limit exceeded"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("Rate limit exceeded")
+        );
         assert_eq!(mem.count().await.unwrap(), 1);
     }
 }

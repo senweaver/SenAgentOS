@@ -29,12 +29,7 @@ pub enum Motion {
 }
 
 /// Resolve a motion to a target cursor position.
-pub fn resolve_motion(
-    motion: Motion,
-    text: &str,
-    cursor: usize,
-    count: u32,
-) -> usize {
+pub fn resolve_motion(motion: Motion, text: &str, cursor: usize, count: u32) -> usize {
     let len = text.len();
     if len == 0 {
         return 0;
@@ -53,10 +48,7 @@ pub fn resolve_motion(
         Motion::Right => (char_pos + count as usize).min(char_len.saturating_sub(1)),
         Motion::LineStart => 0,
         Motion::LineEnd => char_len.saturating_sub(1),
-        Motion::FirstNonBlank => chars
-            .iter()
-            .position(|c| !c.is_whitespace())
-            .unwrap_or(0),
+        Motion::FirstNonBlank => chars.iter().position(|c| !c.is_whitespace()).unwrap_or(0),
         Motion::WordForward => {
             let mut pos = char_pos;
             for _ in 0..count {

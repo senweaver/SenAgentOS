@@ -245,9 +245,7 @@ pub fn heuristic_eval(
 
     let accuracy = {
         let cop_out_phrases = ["i don't know", "i'm not sure", "i cannot", "as an ai"];
-        let is_cop_out = cop_out_phrases
-            .iter()
-            .any(|p| resp_lower.starts_with(p));
+        let is_cop_out = cop_out_phrases.iter().any(|p| resp_lower.starts_with(p));
         let tool_success_rate = if tool_results.is_empty() {
             1.0
         } else {

@@ -44,11 +44,21 @@ pub struct SupervisorConfig {
     pub capability_limits: HashMap<String, usize>,
 }
 
-fn default_health_interval() -> u64 { 30 }
-fn default_heartbeat_timeout() -> u64 { 60 }
-fn default_max_restarts() -> u32 { 3 }
-fn default_restart_backoff() -> u64 { 5 }
-fn default_max_agents() -> usize { 50 }
+fn default_health_interval() -> u64 {
+    30
+}
+fn default_heartbeat_timeout() -> u64 {
+    60
+}
+fn default_max_restarts() -> u32 {
+    3
+}
+fn default_restart_backoff() -> u64 {
+    5
+}
+fn default_max_agents() -> usize {
+    50
+}
 
 impl Default for SupervisorConfig {
     fn default() -> Self {
@@ -164,11 +174,7 @@ impl Supervisor {
                 if limit == 0 {
                     continue;
                 }
-                let current = self
-                    .registry
-                    .inner()
-                    .find_by_capability(&cap.name)
-                    .len();
+                let current = self.registry.inner().find_by_capability(&cap.name).len();
                 if current >= limit {
                     return Err(format!(
                         "Capability '{}' agent limit ({}) reached",
@@ -271,7 +277,10 @@ impl Supervisor {
             kind: SupervisorEventKind::RestartInitiated,
             agent_id: agent_id.to_string(),
             timestamp: Utc::now(),
-            detail: format!("Restart attempt {}/ {}", record.count, self.config.max_restarts),
+            detail: format!(
+                "Restart attempt {}/ {}",
+                record.count, self.config.max_restarts
+            ),
         };
         events.push(event.clone());
         self.record_event(event);
@@ -553,10 +562,7 @@ mod tests {
         supervisor.register_agent(test_agent("a1")).unwrap();
 
         assert!(supervisor.shutdown_agent("a1"));
-        assert_eq!(
-            registry.get("a1").unwrap().state,
-            AgentState::ShuttingDown
-        );
+        assert_eq!(registry.get("a1").unwrap().state, AgentState::ShuttingDown);
     }
 
     #[test]
@@ -566,14 +572,8 @@ mod tests {
         supervisor.register_agent(test_agent("a2")).unwrap();
 
         supervisor.shutdown_all();
-        assert_eq!(
-            registry.get("a1").unwrap().state,
-            AgentState::ShuttingDown
-        );
-        assert_eq!(
-            registry.get("a2").unwrap().state,
-            AgentState::ShuttingDown
-        );
+        assert_eq!(registry.get("a1").unwrap().state, AgentState::ShuttingDown);
+        assert_eq!(registry.get("a2").unwrap().state, AgentState::ShuttingDown);
     }
 
     #[test]

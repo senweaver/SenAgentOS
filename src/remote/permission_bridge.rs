@@ -70,7 +70,9 @@ impl RemotePermissionBridge {
         // The request would be sent via the bridge messaging system.
         // The response comes back via resolve_permission().
 
-        let response = rx.await.map_err(|_| anyhow::anyhow!("Permission request cancelled"))?;
+        let response = rx
+            .await
+            .map_err(|_| anyhow::anyhow!("Permission request cancelled"))?;
         Ok(response)
     }
 

@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 use crate::config::TtsConfig;
 
@@ -590,7 +590,9 @@ impl TtsManager {
 
         if let Some(ref piper_cfg) = config.piper {
             match PiperTtsProvider::new(&piper_cfg.api_url) {
-                Ok(provider) => { providers.insert("piper".to_string(), Box::new(provider)); }
+                Ok(provider) => {
+                    providers.insert("piper".to_string(), Box::new(provider));
+                }
                 Err(e) => tracing::warn!("Failed to create Piper TTS provider: {e}"),
             }
         }

@@ -6,7 +6,7 @@
 use super::AppState;
 use axum::{
     extract::State,
-    http::{header, HeaderMap, StatusCode},
+    http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Json},
 };
 use chrono::{DateTime, Utc};
@@ -142,29 +142,28 @@ impl DeviceRegistry {
                 return vec![];
             }
         };
-        let rows = match stmt
-            .query_map([], |row| {
-                let id: String = row.get(1)?;
-                let name: Option<String> = row.get(2)?;
-                let device_type: Option<String> = row.get(3)?;
-                let paired_at_str: String = row.get(4)?;
-                let last_seen_str: String = row.get(5)?;
-                let ip_address: Option<String> = row.get(6)?;
-                let paired_at = DateTime::parse_from_rfc3339(&paired_at_str)
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(|_| Utc::now());
-                let last_seen = DateTime::parse_from_rfc3339(&last_seen_str)
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(|_| Utc::now());
-                Ok(DeviceInfo {
-                    id,
-                    name,
-                    device_type,
-                    paired_at,
-                    last_seen,
-                    ip_address,
-                })
-            }) {
+        let rows = match stmt.query_map([], |row| {
+            let id: String = row.get(1)?;
+            let name: Option<String> = row.get(2)?;
+            let device_type: Option<String> = row.get(3)?;
+            let paired_at_str: String = row.get(4)?;
+            let last_seen_str: String = row.get(5)?;
+            let ip_address: Option<String> = row.get(6)?;
+            let paired_at = DateTime::parse_from_rfc3339(&paired_at_str)
+                .map(|dt| dt.with_timezone(&Utc))
+                .unwrap_or_else(|_| Utc::now());
+            let last_seen = DateTime::parse_from_rfc3339(&last_seen_str)
+                .map(|dt| dt.with_timezone(&Utc))
+                .unwrap_or_else(|_| Utc::now());
+            Ok(DeviceInfo {
+                id,
+                name,
+                device_type,
+                paired_at,
+                last_seen,
+                ip_address,
+            })
+        }) {
             Ok(r) => r,
             Err(e) => {
                 tracing::error!("Failed to query devices: {e}");

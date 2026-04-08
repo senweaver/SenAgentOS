@@ -198,11 +198,7 @@ impl OpenRouterProvider {
                 },
             })
             .collect();
-        if valid.is_empty() {
-            None
-        } else {
-            Some(valid)
-        }
+        if valid.is_empty() { None } else { Some(valid) }
     }
 
     fn convert_messages(messages: &[ChatMessage]) -> Vec<NativeMessage> {
@@ -597,11 +593,7 @@ impl Provider for OpenRouterProvider {
                     })
                 })
                 .collect();
-            if specs.is_empty() {
-                None
-            } else {
-                Some(specs)
-            }
+            if specs.is_empty() { None } else { Some(specs) }
         };
 
         // Convert ChatMessage to NativeMessage, preserving structured assistant/tool entries

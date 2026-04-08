@@ -196,7 +196,7 @@ impl Tool for I2cReadTool {
                     success: false,
                     output: String::new(),
                     error: Some("missing required parameter: addr".to_string()),
-                })
+                });
             }
         };
         let len = args.get("len").and_then(|v| v.as_u64()).unwrap_or(1);
@@ -301,7 +301,7 @@ impl Tool for I2cWriteTool {
                     success: false,
                     output: String::new(),
                     error: Some("missing required parameter: addr".to_string()),
-                })
+                });
             }
         };
         let bytes = match args.get("bytes").and_then(|v| v.as_array()) {
@@ -311,7 +311,7 @@ impl Tool for I2cWriteTool {
                     success: false,
                     output: String::new(),
                     error: Some("missing required parameter: bytes".to_string()),
-                })
+                });
             }
         };
 
@@ -402,7 +402,7 @@ impl Tool for SpiTransferTool {
                     success: false,
                     output: String::new(),
                     error: Some("missing required parameter: bytes".to_string()),
-                })
+                });
             }
         };
 
@@ -511,7 +511,7 @@ impl Tool for GpioAardvarkTool {
                     success: false,
                     output: String::new(),
                     error: Some("missing required parameter: action".to_string()),
-                })
+                });
             }
         };
 
@@ -535,7 +535,7 @@ impl Tool for GpioAardvarkTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("unknown action '{other}'; use 'set' or 'get'")),
-                })
+                });
             }
         };
 

@@ -60,7 +60,9 @@ pub struct SlashCommand {
     pub hidden: bool,
     pub requires_interactive: bool,
     pub remote_safe: bool,
-    pub handler: Arc<dyn Fn(CommandContext) -> Pin<Box<dyn Future<Output = CommandResult> + Send>> + Send + Sync>,
+    pub handler: Arc<
+        dyn Fn(CommandContext) -> Pin<Box<dyn Future<Output = CommandResult> + Send>> + Send + Sync,
+    >,
 }
 
 impl std::fmt::Debug for SlashCommand {

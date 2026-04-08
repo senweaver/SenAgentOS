@@ -14,4 +14,4 @@ pub mod schema;
 pub use defaults::default_bindings;
 pub use parser::parse_key_sequence;
 pub use resolver::KeybindingResolver;
-pub use schema::{KeyBinding, KeyAction, KeyModifier};
+pub use schema::{KeyAction, KeyBinding, KeyModifier};

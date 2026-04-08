@@ -118,8 +118,8 @@ impl Tool for MultiSearchTool {
             .build()
             .map_err(|e| anyhow::anyhow!("HTTP client error: {e}"))?;
 
-        let use_ddg = requested_engines.is_empty()
-            || requested_engines.iter().any(|e| e == "duckduckgo");
+        let use_ddg =
+            requested_engines.is_empty() || requested_engines.iter().any(|e| e == "duckduckgo");
         let use_brave = (requested_engines.is_empty()
             || requested_engines.iter().any(|e| e == "brave"))
             && self.brave_api_key.is_some();
@@ -133,9 +133,9 @@ impl Tool for MultiSearchTool {
             let c = client.clone();
             let q = query.to_string();
             let mr = self.max_results;
-            handles.push(tokio::spawn(async move {
-                search_duckduckgo(&c, &q, mr).await
-            }));
+            handles.push(tokio::spawn(
+                async move { search_duckduckgo(&c, &q, mr).await },
+            ));
         }
 
         if use_brave {
@@ -143,9 +143,9 @@ impl Tool for MultiSearchTool {
             let q = query.to_string();
             let key = self.brave_api_key.clone().unwrap();
             let mr = self.max_results;
-            handles.push(tokio::spawn(async move {
-                search_brave(&c, &q, &key, mr).await
-            }));
+            handles.push(tokio::spawn(
+                async move { search_brave(&c, &q, &key, mr).await },
+            ));
         }
 
         if use_searxng {
@@ -284,7 +284,10 @@ async fn search_duckduckgo(
 
     let resp = client
         .get(&url)
-        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+        .header(
+            "User-Agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        )
         .send()
         .await?;
 

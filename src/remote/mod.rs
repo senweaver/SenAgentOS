@@ -2,14 +2,24 @@
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
 //
-// Remote module — mirrors claude-code's `remote/` directory.
-// Manages remote session connections, WebSocket communication,
-// permission bridging, and SDK message adaptation.
+// Remote IO module - mirrors claude-code-typescript-src remote/ and cli/transports/.
+// Provides WebSocket and SSE transport implementations for SDK/remote mode.
 
 pub mod manager;
 pub mod permission_bridge;
 pub mod websocket;
 
-pub use manager::RemoteSessionManager;
-pub use permission_bridge::RemotePermissionBridge;
-pub use websocket::SessionWebSocket;
+// Re-export transport modules
+pub mod transports {
+    pub mod sse;
+    pub mod transport_utils;
+    pub mod websocket;
+}
+
+// Re-export common types
+pub use transports::sse::SSETransport;
+pub use transports::transport_utils::{
+    TransportConfig, TransportEvent, TransportResult, TransportType, build_transport_headers,
+    get_transport_for_url, parse_url_for_transport,
+};
+pub use transports::websocket::WebSocketTransport;

@@ -10,8 +10,8 @@
 
 use super::traits::{Tool, ToolResult};
 use crate::channels::session_backend::SessionBackend;
-use crate::security::policy::ToolOperation;
 use crate::security::SecurityPolicy;
+use crate::security::policy::ToolOperation;
 use async_trait::async_trait;
 use serde_json::json;
 use std::fmt::Write;
@@ -448,10 +448,12 @@ mod tests {
         assert_eq!(tool.name(), "sessions_history");
         let schema = tool.parameters_schema();
         assert!(schema["properties"]["session_id"].is_object());
-        assert!(schema["required"]
-            .as_array()
-            .unwrap()
-            .contains(&json!("session_id")));
+        assert!(
+            schema["required"]
+                .as_array()
+                .unwrap()
+                .contains(&json!("session_id"))
+        );
     }
 
     // ── SessionsSendTool tests ──────────────────────────────────────
@@ -564,13 +566,17 @@ mod tests {
         let tool = SessionsSendTool::new(backend, test_security());
         assert_eq!(tool.name(), "sessions_send");
         let schema = tool.parameters_schema();
-        assert!(schema["required"]
-            .as_array()
-            .unwrap()
-            .contains(&json!("session_id")));
-        assert!(schema["required"]
-            .as_array()
-            .unwrap()
-            .contains(&json!("message")));
+        assert!(
+            schema["required"]
+                .as_array()
+                .unwrap()
+                .contains(&json!("session_id"))
+        );
+        assert!(
+            schema["required"]
+                .as_array()
+                .unwrap()
+                .contains(&json!("message"))
+        );
     }
 }

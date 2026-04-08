@@ -53,7 +53,11 @@ impl Workflow {
     pub fn new(name: impl Into<String>) -> Self {
         let now = Utc::now();
         Self {
-            id: format!("wf-{}-{}", now.timestamp_millis(), uuid::Uuid::new_v4().to_string()[..8].to_string()),
+            id: format!(
+                "wf-{}-{}",
+                now.timestamp_millis(),
+                uuid::Uuid::new_v4().to_string()[..8].to_string()
+            ),
             name: name.into(),
             description: String::new(),
             steps: Vec::new(),
@@ -312,7 +316,11 @@ impl WorkflowRun {
     pub fn new(workflow_id: WorkflowId, input: impl Into<String>) -> Self {
         let now = Utc::now();
         Self {
-            id: format!("run-{}-{}", now.timestamp_millis(), uuid::Uuid::new_v4().to_string()[..8].to_string()),
+            id: format!(
+                "run-{}-{}",
+                now.timestamp_millis(),
+                uuid::Uuid::new_v4().to_string()[..8].to_string()
+            ),
             workflow_id,
             status: WorkflowRunStatus::Pending,
             input: input.into(),
@@ -415,11 +423,7 @@ impl StepResult {
     }
 
     /// Create a failed step result.
-    pub fn failure(
-        step_name: impl Into<String>,
-        index: usize,
-        error: impl Into<String>,
-    ) -> Self {
+    pub fn failure(step_name: impl Into<String>, index: usize, error: impl Into<String>) -> Self {
         Self {
             step_name: step_name.into(),
             step_index: index,
@@ -537,7 +541,9 @@ mod tests {
     #[test]
     fn test_workflow_step() {
         let step = WorkflowStep::new("step1", "Process {{input}}")
-            .with_agent(StepAgent::ByName { name: "analyzer".to_string() })
+            .with_agent(StepAgent::ByName {
+                name: "analyzer".to_string(),
+            })
             .with_mode(StepMode::FanOut)
             .with_output_var("result");
 
@@ -610,16 +616,15 @@ mod tests {
 
     #[test]
     fn test_validate_workflow_valid() {
-        let workflow = Workflow::new("Valid")
-            .add_step(WorkflowStep::new("step1", "Process {{input}}"));
+        let workflow =
+            Workflow::new("Valid").add_step(WorkflowStep::new("step1", "Process {{input}}"));
 
         assert!(validate_workflow(&workflow).is_ok());
     }
 
     #[test]
     fn test_validate_empty_prompt() {
-        let workflow = Workflow::new("Invalid")
-            .add_step(WorkflowStep::new("step1", ""));
+        let workflow = Workflow::new("Invalid").add_step(WorkflowStep::new("step1", ""));
 
         assert!(matches!(
             validate_workflow(&workflow),

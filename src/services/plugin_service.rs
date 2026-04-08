@@ -97,7 +97,9 @@ impl PluginService {
     /// List enabled plugins.
     pub async fn list_enabled(&self) -> Vec<PluginInfo> {
         let inner = self.inner.read().await;
-        inner.plugins.values()
+        inner
+            .plugins
+            .values()
             .filter(|p| p.status == PluginStatus::Enabled)
             .cloned()
             .collect()
@@ -118,7 +120,9 @@ impl PluginService {
     /// Get all tools provided by enabled plugins.
     pub async fn provided_tools(&self) -> Vec<String> {
         let inner = self.inner.read().await;
-        inner.plugins.values()
+        inner
+            .plugins
+            .values()
             .filter(|p| p.status == PluginStatus::Enabled)
             .flat_map(|p| p.provides_tools.iter().cloned())
             .collect()
@@ -127,7 +131,9 @@ impl PluginService {
     /// Get all commands provided by enabled plugins.
     pub async fn provided_commands(&self) -> Vec<String> {
         let inner = self.inner.read().await;
-        inner.plugins.values()
+        inner
+            .plugins
+            .values()
             .filter(|p| p.status == PluginStatus::Enabled)
             .flat_map(|p| p.provides_commands.iter().cloned())
             .collect()

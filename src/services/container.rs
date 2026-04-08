@@ -195,25 +195,141 @@ fn register_all_commands() -> CommandRegistry {
 
     use CommandCategory::*;
 
-    register_cmd!("add-dir", "Add a directory to context", "/add-dir <path>", General, crate::commands::add_dir::handle);
-    register_cmd!("clear", "Clear the terminal", "/clear", Session, crate::commands::clear::handle, interactive);
-    register_cmd!("compact", "Compact conversation", "/compact [prompt]", Session, crate::commands::compact::handle);
-    register_cmd!("config", "View or modify config", "/config <subcommand>", Configuration, crate::commands::config_cmd::handle);
-    register_cmd!("context", "Show context usage", "/context", General, crate::commands::context::handle);
-    register_cmd!("cost", "Show session cost", "/cost", General, crate::commands::cost::handle);
-    register_cmd!("doctor", "Run diagnostics", "/doctor", Debug, crate::commands::doctor_cmd::handle);
-    register_cmd!("help", "Show help", "/help [command]", General, crate::commands::help::handle);
-    register_cmd!("history", "Manage conversation history", "/history <subcommand>", Session, crate::commands::history::handle);
-    register_cmd!("memory", "Manage memories", "/memory <subcommand>", Memory, crate::commands::memory_cmd::handle);
-    register_cmd!("model", "Switch or show model", "/model [name]", Configuration, crate::commands::model::handle);
-    register_cmd!("plan", "Toggle plan mode", "/plan", Session, crate::commands::plan::handle);
-    register_cmd!("plugin", "Manage plugins", "/plugin <subcommand>", Tools, crate::commands::plugin_cmd::handle);
-    register_cmd!("resume", "Resume a session", "/resume [session_id]", Session, crate::commands::resume::handle);
-    register_cmd!("skills", "Manage skills", "/skills <subcommand>", Skills, crate::commands::skills_cmd::handle);
-    register_cmd!("status", "Show agent status", "/status", General, crate::commands::status::handle);
-    register_cmd!("tasks", "Manage background tasks", "/tasks <subcommand>", Tasks, crate::commands::tasks_cmd::handle);
-    register_cmd!("theme", "Change output theme", "/theme [name]", Configuration, crate::commands::theme::handle);
-    register_cmd!("voice", "Toggle voice mode", "/voice", Session, crate::commands::voice_cmd::handle, interactive);
+    register_cmd!(
+        "add-dir",
+        "Add a directory to context",
+        "/add-dir <path>",
+        General,
+        crate::commands::add_dir::handle
+    );
+    register_cmd!(
+        "clear",
+        "Clear the terminal",
+        "/clear",
+        Session,
+        crate::commands::clear::handle,
+        interactive
+    );
+    register_cmd!(
+        "compact",
+        "Compact conversation",
+        "/compact [prompt]",
+        Session,
+        crate::commands::compact::handle
+    );
+    register_cmd!(
+        "config",
+        "View or modify config",
+        "/config <subcommand>",
+        Configuration,
+        crate::commands::config_cmd::handle
+    );
+    register_cmd!(
+        "context",
+        "Show context usage",
+        "/context",
+        General,
+        crate::commands::context::handle
+    );
+    register_cmd!(
+        "cost",
+        "Show session cost",
+        "/cost",
+        General,
+        crate::commands::cost::handle
+    );
+    register_cmd!(
+        "doctor",
+        "Run diagnostics",
+        "/doctor",
+        Debug,
+        crate::commands::doctor_cmd::handle
+    );
+    register_cmd!(
+        "help",
+        "Show help",
+        "/help [command]",
+        General,
+        crate::commands::help::handle
+    );
+    register_cmd!(
+        "history",
+        "Manage conversation history",
+        "/history <subcommand>",
+        Session,
+        crate::commands::history::handle
+    );
+    register_cmd!(
+        "memory",
+        "Manage memories",
+        "/memory <subcommand>",
+        Memory,
+        crate::commands::memory_cmd::handle
+    );
+    register_cmd!(
+        "model",
+        "Switch or show model",
+        "/model [name]",
+        Configuration,
+        crate::commands::model::handle
+    );
+    register_cmd!(
+        "plan",
+        "Toggle plan mode",
+        "/plan",
+        Session,
+        crate::commands::plan::handle
+    );
+    register_cmd!(
+        "plugin",
+        "Manage plugins",
+        "/plugin <subcommand>",
+        Tools,
+        crate::commands::plugin_cmd::handle
+    );
+    register_cmd!(
+        "resume",
+        "Resume a session",
+        "/resume [session_id]",
+        Session,
+        crate::commands::resume::handle
+    );
+    register_cmd!(
+        "skills",
+        "Manage skills",
+        "/skills <subcommand>",
+        Skills,
+        crate::commands::skills_cmd::handle
+    );
+    register_cmd!(
+        "status",
+        "Show agent status",
+        "/status",
+        General,
+        crate::commands::status::handle
+    );
+    register_cmd!(
+        "tasks",
+        "Manage background tasks",
+        "/tasks <subcommand>",
+        Tasks,
+        crate::commands::tasks_cmd::handle
+    );
+    register_cmd!(
+        "theme",
+        "Change output theme",
+        "/theme [name]",
+        Configuration,
+        crate::commands::theme::handle
+    );
+    register_cmd!(
+        "voice",
+        "Toggle voice mode",
+        "/voice",
+        Session,
+        crate::commands::voice_cmd::handle,
+        interactive
+    );
 
     registry
 }

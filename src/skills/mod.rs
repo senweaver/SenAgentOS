@@ -852,7 +852,10 @@ pub fn skills_to_prompt_with_mode(
                 .collect();
 
             if !registered.is_empty() {
-                let _ = writeln!(prompt, "    <callable_tools hint=\"These are registered as callable tool specs. Invoke them directly by name ({{}}.{{}}) instead of using shell.\">");
+                let _ = writeln!(
+                    prompt,
+                    "    <callable_tools hint=\"These are registered as callable tool specs. Invoke them directly by name ({{}}.{{}}) instead of using shell.\">"
+                );
                 for tool in &registered {
                     let _ = writeln!(prompt, "      <tool>");
                     write_xml_text_element(
@@ -1388,7 +1391,9 @@ pub fn handle_command(command: crate::SkillCommands, config: &crate::config::Con
                 println!("No skills installed.");
                 println!();
                 println!("  Create one: mkdir -p ~/.senagent/workspace/skills/my-skill");
-                println!("              echo '# My Skill' > ~/.senagent/workspace/skills/my-skill/SKILL.md");
+                println!(
+                    "              echo '# My Skill' > ~/.senagent/workspace/skills/my-skill/SKILL.md"
+                );
                 println!();
                 println!("  Or install: senagent skills install <source>");
             } else {

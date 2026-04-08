@@ -15,12 +15,12 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Instant;
 
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 use tracing::{debug, error, info, trace, warn};
 
 use crate::workflows::types::{
-    ErrorMode, StepAgent, StepMode, StepResult, Workflow, WorkflowRun,
-    WorkflowStep, validate_workflow,
+    ErrorMode, StepAgent, StepMode, StepResult, Workflow, WorkflowRun, WorkflowStep,
+    validate_workflow,
 };
 // WorkflowRunStatus is re-exported from mod.rs for external consumers.
 
@@ -62,7 +62,9 @@ impl WorkflowEngine {
 
         // Seed run variables from workflow defaults (caller-provided values take precedence)
         for (key, value) in &workflow.variables {
-            run.variables.entry(key.clone()).or_insert_with(|| value.clone());
+            run.variables
+                .entry(key.clone())
+                .or_insert_with(|| value.clone());
         }
 
         run.mark_started();
@@ -75,20 +77,25 @@ impl WorkflowEngine {
 
         let workflow_timeout = Duration::from_secs(workflow.timeout_secs);
 
-        let boxed_executor: Arc<dyn Fn(StepAgent, String) -> Pin<Box<dyn Future<Output = Result<(String, u64, u64), String>> + Send>> + Send + Sync> =
-            Arc::new(move |agent, prompt| Box::pin(step_executor(agent, prompt)));
+        let boxed_executor: Arc<
+            dyn Fn(
+                    StepAgent,
+                    String,
+                )
+                    -> Pin<Box<dyn Future<Output = Result<(String, u64, u64), String>> + Send>>
+                + Send
+                + Sync,
+        > = Arc::new(move |agent, prompt| Box::pin(step_executor(agent, prompt)));
 
         let execution = async {
-            self.execute_steps(workflow, &mut run, agent_resolver, boxed_executor).await
+            self.execute_steps(workflow, &mut run, agent_resolver, boxed_executor)
+                .await
         };
 
         match timeout(workflow_timeout, execution).await {
             Ok(result) => result,
             Err(_) => {
-                let msg = format!(
-                    "Workflow timeout after {} seconds",
-                    workflow.timeout_secs
-                );
+                let msg = format!("Workflow timeout after {} seconds", workflow.timeout_secs);
                 error!(run_id = %run.id, "{}", msg);
                 run.mark_failed(msg);
                 run
@@ -102,7 +109,15 @@ impl WorkflowEngine {
         workflow: &Workflow,
         run: &mut WorkflowRun,
         agent_resolver: impl Fn(&StepAgent) -> Option<(String, String)> + Send + Sync,
-        step_executor: Arc<dyn Fn(StepAgent, String) -> Pin<Box<dyn Future<Output = Result<(String, u64, u64), String>> + Send>> + Send + Sync>,
+        step_executor: Arc<
+            dyn Fn(
+                    StepAgent,
+                    String,
+                )
+                    -> Pin<Box<dyn Future<Output = Result<(String, u64, u64), String>> + Send>>
+                + Send
+                + Sync,
+        >,
     ) -> WorkflowRun {
         let steps = workflow.steps.clone();
         let mut current_input = run.input.clone();
@@ -145,7 +160,9 @@ impl WorkflowEngine {
                     if !result.success {
                         run.add_step_result(result.clone());
                         if !step.error_mode.allows_continue() {
-                            run.mark_failed(result.error.unwrap_or_else(|| "Step failed".to_string()));
+                            run.mark_failed(
+                                result.error.unwrap_or_else(|| "Step failed".to_string()),
+                            );
                             return run.clone();
                         }
                         // If Skip, continue to next step with same input
@@ -279,7 +296,11 @@ impl WorkflowEngine {
                     if !result.success {
                         run.add_step_result(result.clone());
                         if !step.error_mode.allows_continue() {
-                            run.mark_failed(result.error.unwrap_or_else(|| "Collect step failed".to_string()));
+                            run.mark_failed(
+                                result
+                                    .error
+                                    .unwrap_or_else(|| "Collect step failed".to_string()),
+                            );
                             return run.clone();
                         }
                     } else {
@@ -321,7 +342,11 @@ impl WorkflowEngine {
                         if !result.success {
                             run.add_step_result(result.clone());
                             if !step.error_mode.allows_continue() {
-                                run.mark_failed(result.error.unwrap_or_else(|| "Conditional step failed".to_string()));
+                                run.mark_failed(
+                                    result
+                                        .error
+                                        .unwrap_or_else(|| "Conditional step failed".to_string()),
+                                );
                                 return run.clone();
                             }
                         } else {
@@ -349,7 +374,10 @@ impl WorkflowEngine {
                     i += 1;
                 }
 
-                StepMode::Loop { max_iterations, until } => {
+                StepMode::Loop {
+                    max_iterations,
+                    until,
+                } => {
                     let mut iteration = 0;
                     let mut loop_output = current_input.clone();
                     let max_iter = *max_iterations;
@@ -370,7 +398,11 @@ impl WorkflowEngine {
                         if !result.success {
                             run.add_step_result(result.clone());
                             if !step.error_mode.allows_continue() {
-                                run.mark_failed(result.error.unwrap_or_else(|| "Loop step failed".to_string()));
+                                run.mark_failed(
+                                    result
+                                        .error
+                                        .unwrap_or_else(|| "Loop step failed".to_string()),
+                                );
                                 return run.clone();
                             }
                             break;
@@ -380,7 +412,11 @@ impl WorkflowEngine {
                         run.add_step_result(result);
 
                         // Check exit condition AFTER execution (do-while semantics)
-                        if !until_str.is_empty() && loop_output.to_lowercase().contains(&until_str.to_lowercase()) {
+                        if !until_str.is_empty()
+                            && loop_output
+                                .to_lowercase()
+                                .contains(&until_str.to_lowercase())
+                        {
                             debug!(
                                 run_id = %run.id,
                                 step = %step.name,
@@ -425,7 +461,15 @@ impl WorkflowEngine {
         index: usize,
         input: &str,
         variables: &HashMap<String, String>,
-        step_executor: &Arc<dyn Fn(StepAgent, String) -> Pin<Box<dyn Future<Output = Result<(String, u64, u64), String>> + Send>> + Send + Sync>,
+        step_executor: &Arc<
+            dyn Fn(
+                    StepAgent,
+                    String,
+                )
+                    -> Pin<Box<dyn Future<Output = Result<(String, u64, u64), String>> + Send>>
+                + Send
+                + Sync,
+        >,
     ) -> StepResult {
         let expanded_prompt = step.expand_prompt(variables, input);
 
@@ -443,12 +487,7 @@ impl WorkflowEngine {
             }
 
             let result = self
-                .execute_single_step(
-                    step,
-                    index,
-                    &expanded_prompt,
-                    step_executor,
-                )
+                .execute_single_step(step, index, &expanded_prompt, step_executor)
                 .await;
 
             if result.success {
@@ -459,11 +498,19 @@ impl WorkflowEngine {
 
             if attempt == max_retries {
                 // All retries exhausted
-                return StepResult::failure(&step.name, index, last_error.unwrap_or_else(|| "Step failed".to_string()));
+                return StepResult::failure(
+                    &step.name,
+                    index,
+                    last_error.unwrap_or_else(|| "Step failed".to_string()),
+                );
             }
         }
 
-        StepResult::failure(&step.name, index, last_error.unwrap_or_else(|| "Step failed".to_string()))
+        StepResult::failure(
+            &step.name,
+            index,
+            last_error.unwrap_or_else(|| "Step failed".to_string()),
+        )
     }
 
     /// Execute a single step (one attempt).
@@ -472,7 +519,15 @@ impl WorkflowEngine {
         step: &WorkflowStep,
         index: usize,
         prompt: &str,
-        step_executor: &Arc<dyn Fn(StepAgent, String) -> Pin<Box<dyn Future<Output = Result<(String, u64, u64), String>> + Send>> + Send + Sync>,
+        step_executor: &Arc<
+            dyn Fn(
+                    StepAgent,
+                    String,
+                )
+                    -> Pin<Box<dyn Future<Output = Result<(String, u64, u64), String>> + Send>>
+                + Send
+                + Sync,
+        >,
     ) -> StepResult {
         let start = Instant::now();
 
@@ -487,16 +542,12 @@ impl WorkflowEngine {
                     .with_tokens(input_tokens, output_tokens)
                     .with_duration(duration_ms)
             }
-            Ok(Err(e)) => {
-                StepResult::failure(&step.name, index, e)
-            }
-            Err(_) => {
-                StepResult::failure(
-                    &step.name,
-                    index,
-                    format!("Step timeout after {} seconds", step.timeout_secs),
-                )
-            }
+            Ok(Err(e)) => StepResult::failure(&step.name, index, e),
+            Err(_) => StepResult::failure(
+                &step.name,
+                index,
+                format!("Step timeout after {} seconds", step.timeout_secs),
+            ),
         }
     }
 }
@@ -535,8 +586,8 @@ fn evaluate_condition(condition: &str, input: &str) -> bool {
 }
 
 /// Create a simple step executor for testing.
-pub fn mock_step_executor() -> impl Fn(StepAgent, String) -> std::future::Ready<Result<(String, u64, u64), String>>
-{
+pub fn mock_step_executor()
+-> impl Fn(StepAgent, String) -> std::future::Ready<Result<(String, u64, u64), String>> {
     |_agent, prompt| {
         std::future::ready(Ok((
             format!("Processed: {}", prompt),
@@ -557,13 +608,15 @@ mod tests {
     async fn test_execute_simple_workflow() {
         let engine = WorkflowEngine::new();
 
-        let workflow = Workflow::new("Test")
-            .add_step(WorkflowStep::new("step1", "Process {{input}}"));
+        let workflow =
+            Workflow::new("Test").add_step(WorkflowStep::new("step1", "Process {{input}}"));
 
         let run = WorkflowRun::new(workflow.id.clone(), "hello");
         let resolver = |_agent: &StepAgent| Some(("agent-1".to_string(), "Test Agent".to_string()));
 
-        let completed_run = engine.execute_run(&workflow, run, resolver, mock_step_executor()).await;
+        let completed_run = engine
+            .execute_run(&workflow, run, resolver, mock_step_executor())
+            .await;
 
         assert!(completed_run.is_terminal());
         assert!(completed_run.status == WorkflowRunStatus::Completed);
@@ -582,7 +635,9 @@ mod tests {
         let run = WorkflowRun::new(workflow.id.clone(), "data");
         let resolver = |_agent: &StepAgent| Some(("agent-1".to_string(), "Test Agent".to_string()));
 
-        let completed_run = engine.execute_run(&workflow, run, resolver, mock_step_executor()).await;
+        let completed_run = engine
+            .execute_run(&workflow, run, resolver, mock_step_executor())
+            .await;
 
         assert!(completed_run.status == WorkflowRunStatus::Completed);
         assert_eq!(completed_run.step_results.len(), 3);
@@ -593,16 +648,18 @@ mod tests {
         let engine = WorkflowEngine::new();
 
         // Step that should execute because input contains "test"
-        let workflow = Workflow::new("Conditional")
-            .add_step(
-                WorkflowStep::new("check", "Process {{input}}")
-                    .with_mode(StepMode::Conditional { condition: "contains:test".to_string() }),
-            );
+        let workflow = Workflow::new("Conditional").add_step(
+            WorkflowStep::new("check", "Process {{input}}").with_mode(StepMode::Conditional {
+                condition: "contains:test".to_string(),
+            }),
+        );
 
         let run = WorkflowRun::new(workflow.id.clone(), "this is a test");
         let resolver = |_agent: &StepAgent| Some(("agent-1".to_string(), "Test Agent".to_string()));
 
-        let completed_run = engine.execute_run(&workflow, run, resolver, mock_step_executor()).await;
+        let completed_run = engine
+            .execute_run(&workflow, run, resolver, mock_step_executor())
+            .await;
 
         assert!(completed_run.status == WorkflowRunStatus::Completed);
         // Should have executed the conditional step
@@ -615,16 +672,18 @@ mod tests {
         let engine = WorkflowEngine::new();
 
         // Step that should be skipped because condition not met
-        let workflow = Workflow::new("Conditional")
-            .add_step(
-                WorkflowStep::new("check", "Process {{input}}")
-                    .with_mode(StepMode::Conditional { condition: "contains:xyz".to_string() }),
-            );
+        let workflow = Workflow::new("Conditional").add_step(
+            WorkflowStep::new("check", "Process {{input}}").with_mode(StepMode::Conditional {
+                condition: "contains:xyz".to_string(),
+            }),
+        );
 
         let run = WorkflowRun::new(workflow.id.clone(), "this is a test");
         let resolver = |_agent: &StepAgent| Some(("agent-1".to_string(), "Test Agent".to_string()));
 
-        let completed_run = engine.execute_run(&workflow, run, resolver, mock_step_executor()).await;
+        let completed_run = engine
+            .execute_run(&workflow, run, resolver, mock_step_executor())
+            .await;
 
         assert!(completed_run.status == WorkflowRunStatus::Completed);
         // Step should be "skipped" but still counted
@@ -637,16 +696,19 @@ mod tests {
         let engine = WorkflowEngine::new();
 
         // Loop that should exit after a few iterations when output contains "done"
-        let workflow = Workflow::new("Loop Test")
-            .add_step(
-                WorkflowStep::new("iterate", "Process {{input}} done")
-                    .with_mode(StepMode::Loop { max_iterations: 3, until: "done".to_string() }),
-            );
+        let workflow = Workflow::new("Loop Test").add_step(
+            WorkflowStep::new("iterate", "Process {{input}} done").with_mode(StepMode::Loop {
+                max_iterations: 3,
+                until: "done".to_string(),
+            }),
+        );
 
         let run = WorkflowRun::new(workflow.id.clone(), "start");
         let resolver = |_agent: &StepAgent| Some(("agent-1".to_string(), "Test Agent".to_string()));
 
-        let completed_run = engine.execute_run(&workflow, run, resolver, mock_step_executor()).await;
+        let completed_run = engine
+            .execute_run(&workflow, run, resolver, mock_step_executor())
+            .await;
 
         assert!(completed_run.status == WorkflowRunStatus::Completed);
         // Should have multiple step results (one per iteration)
@@ -670,7 +732,9 @@ mod tests {
             Ok(("done".to_string(), 10, 10))
         };
 
-        let completed_run = engine.execute_run(&workflow, run, resolver, slow_executor).await;
+        let completed_run = engine
+            .execute_run(&workflow, run, resolver, slow_executor)
+            .await;
 
         assert!(completed_run.status == WorkflowRunStatus::Failed);
         assert!(completed_run.error.as_ref().unwrap().contains("timeout"));
@@ -680,11 +744,10 @@ mod tests {
     async fn test_error_with_retry() {
         let engine = WorkflowEngine::new();
 
-        let workflow = Workflow::new("Retry Test")
-            .add_step(
-                WorkflowStep::new("flaky", "Do something")
-                    .with_error_mode(ErrorMode::Retry { max_retries: 2 }),
-            );
+        let workflow = Workflow::new("Retry Test").add_step(
+            WorkflowStep::new("flaky", "Do something")
+                .with_error_mode(ErrorMode::Retry { max_retries: 2 }),
+        );
 
         let run = WorkflowRun::new(workflow.id.clone(), "input");
         let resolver = |_agent: &StepAgent| Some(("agent-1".to_string(), "Test Agent".to_string()));
@@ -704,7 +767,9 @@ mod tests {
             }
         };
 
-        let completed_run = engine.execute_run(&workflow, run, resolver, flaky_executor).await;
+        let completed_run = engine
+            .execute_run(&workflow, run, resolver, flaky_executor)
+            .await;
 
         // After retries, it should eventually succeed
         assert!(completed_run.status == WorkflowRunStatus::Completed);
@@ -731,7 +796,9 @@ mod tests {
         let run = WorkflowRun::new(workflow.id.clone(), "input");
         let resolver = |_agent: &StepAgent| Some(("agent-1".to_string(), "Test Agent".to_string()));
 
-        let completed_run = engine.execute_run(&workflow, run, resolver, mock_step_executor()).await;
+        let completed_run = engine
+            .execute_run(&workflow, run, resolver, mock_step_executor())
+            .await;
 
         assert!(completed_run.status == WorkflowRunStatus::Failed);
         assert!(completed_run.error.as_ref().unwrap().contains("validation"));
@@ -747,7 +814,9 @@ mod tests {
         let run = WorkflowRun::new(workflow.id.clone(), "hello");
         let resolver = |_agent: &StepAgent| Some(("agent-1".to_string(), "Test Agent".to_string()));
 
-        let completed_run = engine.execute_run(&workflow, run, resolver, mock_step_executor()).await;
+        let completed_run = engine
+            .execute_run(&workflow, run, resolver, mock_step_executor())
+            .await;
 
         assert!(completed_run.variables.contains_key("result"));
     }

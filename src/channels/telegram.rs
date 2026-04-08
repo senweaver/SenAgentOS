@@ -2727,7 +2727,10 @@ impl Channel for TelegramChannel {
                             .await
                             {
                                 Ok(()) => {
-                                    tracing::info!("Telegram: voice reply sent ({} chars)", text.len());
+                                    tracing::info!(
+                                        "Telegram: voice reply sent ({} chars)",
+                                        text.len()
+                                    );
                                 }
                                 Err(e) => {
                                     tracing::warn!("Telegram: TTS voice reply failed: {e}");
@@ -4902,8 +4905,8 @@ mod tests {
     /// guard in `agent/loop_.rs` will reject photo messages.
     #[test]
     fn groq_provider_rejects_photo_with_vision_error() {
-        use crate::providers::compatible::{AuthStyle, OpenAiCompatibleProvider};
         use crate::providers::Provider;
+        use crate::providers::compatible::{AuthStyle, OpenAiCompatibleProvider};
 
         let groq = OpenAiCompatibleProvider::new(
             "Groq",

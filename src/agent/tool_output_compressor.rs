@@ -119,16 +119,12 @@ impl CompressionResult {
 
 impl ToolOutputCompressor {
     pub fn new(config: ToolOutputCompressorConfig) -> Self {
-        let tee_dir = config
-            .tee_dir
-            .as_ref()
-            .map(PathBuf::from)
-            .or_else(|| {
-                std::env::temp_dir()
-                    .join("senagent-tee")
-                    .to_str()
-                    .map(PathBuf::from)
-            });
+        let tee_dir = config.tee_dir.as_ref().map(PathBuf::from).or_else(|| {
+            std::env::temp_dir()
+                .join("senagent-tee")
+                .to_str()
+                .map(PathBuf::from)
+        });
 
         Self { config, tee_dir }
     }
@@ -245,11 +241,7 @@ impl ToolOutputCompressor {
             .into_iter()
             .flatten()
             .filter_map(|e| e.ok())
-            .filter(|e| {
-                e.path()
-                    .extension()
-                    .map_or(false, |ext| ext == "txt")
-            })
+            .filter(|e| e.path().extension().map_or(false, |ext| ext == "txt"))
             .collect();
 
         if entries.len() < max {
@@ -279,9 +271,7 @@ fn smart_truncate(text: &str, max_chars: usize, tee_path: Option<&PathBuf>) -> S
     let head_len = (max_chars as f64 * head_ratio) as usize;
     let tail_len = max_chars.saturating_sub(head_len).saturating_sub(200);
 
-    let head_end = text[..head_len]
-        .rfind('\n')
-        .unwrap_or(head_len);
+    let head_end = text[..head_len].rfind('\n').unwrap_or(head_len);
 
     let tail_start = if tail_len > 0 {
         let start_search = text.len().saturating_sub(tail_len);
@@ -360,7 +350,11 @@ fn compact_json_value(value: &serde_json::Value, depth: usize) -> serde_json::Va
     match value {
         serde_json::Value::String(s) => {
             if s.len() > 200 {
-                serde_json::Value::String(format!("{}... ({} chars)", s.chars().take(100).collect::<String>(), s.len()))
+                serde_json::Value::String(format!(
+                    "{}... ({} chars)",
+                    s.chars().take(100).collect::<String>(),
+                    s.len()
+                ))
             } else {
                 value.clone()
             }
@@ -447,14 +441,26 @@ fn strip_code_comments(text: &str) -> String {
 
 fn extract_errors(text: &str) -> String {
     let error_patterns = [
-        "error", "Error", "ERROR",
-        "warning", "Warning", "WARN",
-        "failed", "Failed", "FAILED",
-        "panic", "PANIC",
-        "traceback", "Traceback",
-        "exception", "Exception",
-        "fatal", "Fatal", "FATAL",
-        "deny", "Deny",
+        "error",
+        "Error",
+        "ERROR",
+        "warning",
+        "Warning",
+        "WARN",
+        "failed",
+        "Failed",
+        "FAILED",
+        "panic",
+        "PANIC",
+        "traceback",
+        "Traceback",
+        "exception",
+        "Exception",
+        "fatal",
+        "Fatal",
+        "FATAL",
+        "deny",
+        "Deny",
     ];
 
     let lines: Vec<&str> = text.lines().collect();

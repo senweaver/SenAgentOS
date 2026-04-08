@@ -11,4 +11,4 @@ pub mod text_objects;
 pub mod transitions;
 pub mod types;
 
-pub use types::{VimMode, VimState, VimAction};
+pub use types::{VimAction, VimMode, VimState};

@@ -10,8 +10,8 @@
 
 use super::traits::{Tool, ToolResult};
 use crate::channels::traits::{Channel, ChannelMessage, SendMessage};
-use crate::security::policy::ToolOperation;
 use crate::security::SecurityPolicy;
+use crate::security::policy::ToolOperation;
 use crate::tools::ask_user::ChannelMapHandle;
 use async_trait::async_trait;
 use parking_lot::RwLock;
@@ -125,7 +125,9 @@ impl EscalateToHumanTool {
         let creds = match self.get_pushover_credentials().await {
             Some(c) => c,
             None => {
-                tracing::debug!("escalate_to_human: Pushover credentials not available, skipping push notification");
+                tracing::debug!(
+                    "escalate_to_human: Pushover credentials not available, skipping push notification"
+                );
                 return;
             }
         };

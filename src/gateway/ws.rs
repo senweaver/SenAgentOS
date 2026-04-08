@@ -23,10 +23,10 @@
 use super::AppState;
 use axum::{
     extract::{
-        ws::{Message, WebSocket},
         Query, State, WebSocketUpgrade,
+        ws::{Message, WebSocket},
     },
-    http::{header, HeaderMap},
+    http::{HeaderMap, header},
     response::IntoResponse,
 };
 use futures_util::{SinkExt, StreamExt};
@@ -205,10 +205,7 @@ async fn handle_socket(
     if config.rbac.enabled {
         if let Some(ref engine) = state.rbac {
             let identity = crate::security::rbac::CallerIdentity::from_gateway_session(&session_id);
-            agent.set_rbac_session(
-                Some(std::sync::Arc::clone(engine)),
-                Some(identity),
-            );
+            agent.set_rbac_session(Some(std::sync::Arc::clone(engine)), Some(identity));
         }
     }
 
@@ -347,7 +344,7 @@ async fn handle_socket(
         };
 
         let msg_type = parsed["type"].as_str().unwrap_or("");
-        if msg_type != "message" {
+        if msg_type != "message" && msg_type != "clarification_response" {
             let err = serde_json::json!({
                 "type": "error",
                 "message": format!(
@@ -435,6 +432,15 @@ async fn process_chat_message(
                 TurnEvent::ToolResult { name, output } => {
                     serde_json::json!({ "type": "tool_result", "name": name, "output": output })
                 }
+                TurnEvent::Clarification { request } => {
+                    serde_json::json!({
+                        "type": "clarification",
+                        "category": request.category,
+                        "question": request.question,
+                        "choices": request.choices,
+                        "context": request.context,
+                    })
+                }
             };
             let _ = sender.send(Message::Text(ws_msg.to_string().into())).await;
         }
@@ -488,7 +494,9 @@ async fn process_chat_message(
                                 "type": "session_title",
                                 "title": title,
                             });
-                            let _ = sender.send(Message::Text(title_msg.to_string().into())).await;
+                            let _ = sender
+                                .send(Message::Text(title_msg.to_string().into()))
+                                .await;
                         }
                     }
                 }
@@ -501,7 +509,8 @@ async fn process_chat_message(
             // Post-turn learning hooks (fire-and-forget)
             let config_snapshot = state.config.lock().clone();
             {
-                let hooks = crate::agent::runtime_hooks::LearningHooks::from_config(&config_snapshot);
+                let hooks =
+                    crate::agent::runtime_hooks::LearningHooks::from_config(&config_snapshot);
                 hooks.record_turn_heuristics(content, &response, &[]);
             }
 
@@ -529,7 +538,9 @@ async fn process_chat_message(
                         "type": "suggestions",
                         "suggestions": suggestion_data,
                     });
-                    let _ = sender.send(Message::Text(suggestions_msg.to_string().into())).await;
+                    let _ = sender
+                        .send(Message::Text(suggestions_msg.to_string().into()))
+                        .await;
                 }
             }
         }

@@ -9,19 +9,19 @@
 // message relay, and capacity/wake management for controlling agent sessions
 // from mobile/web clients.
 
-pub mod types;
+pub mod api;
 pub mod config;
+pub mod device;
+pub mod jwt;
 pub mod messaging;
 pub mod session;
-pub mod jwt;
-pub mod transport;
-pub mod device;
-pub mod api;
 pub mod status;
+pub mod transport;
+pub mod types;
 
-pub use types::{BridgeMessage, BridgeStatus, BridgeEvent};
 pub use config::BridgeConfig;
+pub use device::TrustedDevice;
 pub use messaging::BridgeMessaging;
 pub use session::BridgeSession;
 pub use transport::BridgeTransport;
-pub use device::TrustedDevice;
+pub use types::{BridgeEvent, BridgeMessage, BridgeStatus};

@@ -7,25 +7,25 @@
 //! tasks from other agents and responding to discovery requests.
 
 use axum::{
+    Router,
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Json},
     routing::{get, post},
-    Router,
 };
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::gateway::a2a::types::{
-    A2aError, A2aTask, AgentCard, CancelTaskRequest, CancelTaskResponse,
+    A2aError, A2aTask, A2aTaskStore, AgentCard, CancelTaskRequest, CancelTaskResponse,
     ListAgentsResponse, SendTaskRequest, SendTaskResponse, TaskId, TaskResult,
-    A2aTaskStore,
 };
 
 /// Callback type for executing A2A tasks asynchronously.
 /// Takes the task description as input, returns the result string.
-pub type TaskExecutor = Arc<dyn Fn(String) -> tokio::task::JoinHandle<Result<String, String>> + Send + Sync>;
+pub type TaskExecutor =
+    Arc<dyn Fn(String) -> tokio::task::JoinHandle<Result<String, String>> + Send + Sync>;
 
 /// Shared state for A2A routes.
 #[derive(Clone)]
@@ -119,7 +119,8 @@ pub async fn send_task(
         return (
             StatusCode::BAD_REQUEST,
             Json(A2aError::invalid_request("Task name is required")),
-        ).into_response();
+        )
+            .into_response();
     }
 
     let callback_url = request.callback_url.clone();
@@ -191,16 +192,10 @@ pub async fn send_task(
 
 /// GET /a2a/tasks/{id}
 /// Get the status of a task.
-pub async fn get_task(
-    State(state): State<A2aState>,
-    Path(id): Path<TaskId>,
-) -> impl IntoResponse {
+pub async fn get_task(State(state): State<A2aState>, Path(id): Path<TaskId>) -> impl IntoResponse {
     match state.get_task(&id) {
         Some(task) => (StatusCode::OK, Json(task)).into_response(),
-        None => (
-            StatusCode::NOT_FOUND,
-            Json(A2aError::task_not_found(&id)),
-        ).into_response(),
+        None => (StatusCode::NOT_FOUND, Json(A2aError::task_not_found(&id))).into_response(),
     }
 }
 
@@ -220,12 +215,14 @@ pub async fn cancel_task(
                         "Task '{}' is already in terminal state: {}",
                         id, task.status
                     ))),
-                ).into_response();
+                )
+                    .into_response();
             }
 
             task.mark_cancelled();
             if let Some(reason) = request.reason {
-                task.metadata.insert("cancel_reason".to_string(), serde_json::json!(reason));
+                task.metadata
+                    .insert("cancel_reason".to_string(), serde_json::json!(reason));
             }
 
             state.update_task(task.clone());
@@ -239,10 +236,7 @@ pub async fn cancel_task(
 
             (StatusCode::OK, Json(response)).into_response()
         }
-        None => (
-            StatusCode::NOT_FOUND,
-            Json(A2aError::task_not_found(&id)),
-        ).into_response(),
+        None => (StatusCode::NOT_FOUND, Json(A2aError::task_not_found(&id))).into_response(),
     }
 }
 
@@ -277,16 +271,22 @@ pub async fn discover_external(
             Ok(card) => {
                 let mut ext = state.external_agents.lock();
                 ext.push((url.clone(), card.clone()));
-                results.insert(url.clone(), serde_json::json!({
-                    "status": "discovered",
-                    "agent": card,
-                }));
+                results.insert(
+                    url.clone(),
+                    serde_json::json!({
+                        "status": "discovered",
+                        "agent": card,
+                    }),
+                );
             }
             Err(e) => {
-                results.insert(url.clone(), serde_json::json!({
-                    "status": "failed",
-                    "error": format!("{e}"),
-                }));
+                results.insert(
+                    url.clone(),
+                    serde_json::json!({
+                        "status": "failed",
+                        "error": format!("{e}"),
+                    }),
+                );
             }
         }
     }
@@ -418,7 +418,9 @@ mod tests {
 
         // Verify task was stored
         let task_id = {
-            let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
+            let body = axum::body::to_bytes(response.into_body(), 1024)
+                .await
+                .unwrap();
             let response: SendTaskResponse = serde_json::from_slice(&body).unwrap();
             response.task.id.clone()
         };

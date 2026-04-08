@@ -214,10 +214,7 @@ impl SessionState {
         cache_read: u64,
         cost_usd: f64,
     ) {
-        let entry = self
-            .model_usage
-            .entry(model_name.to_string())
-            .or_default();
+        let entry = self.model_usage.entry(model_name.to_string()).or_default();
         entry.input_tokens += input_tokens;
         entry.output_tokens += output_tokens;
         entry.cache_creation_input_tokens += cache_creation;
@@ -258,7 +255,10 @@ impl BootstrapState {
     where
         F: FnOnce(&SessionState) -> R,
     {
-        let guard = self.inner.read().expect("bootstrap state read lock poisoned");
+        let guard = self
+            .inner
+            .read()
+            .expect("bootstrap state read lock poisoned");
         f(&guard)
     }
 
@@ -267,7 +267,10 @@ impl BootstrapState {
     where
         F: FnOnce(&mut SessionState) -> R,
     {
-        let mut guard = self.inner.write().expect("bootstrap state write lock poisoned");
+        let mut guard = self
+            .inner
+            .write()
+            .expect("bootstrap state write lock poisoned");
         f(&mut guard)
     }
 

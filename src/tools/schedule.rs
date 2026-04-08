@@ -620,11 +620,13 @@ mod tests {
             .await
             .unwrap();
         assert!(!blocked.success);
-        assert!(blocked
-            .error
-            .as_deref()
-            .unwrap_or_default()
-            .contains("Rate limit exceeded"));
+        assert!(
+            blocked
+                .error
+                .as_deref()
+                .unwrap_or_default()
+                .contains("Rate limit exceeded")
+        );
 
         let list = tool.execute(json!({"action": "list"})).await.unwrap();
         assert!(list.success);
@@ -669,11 +671,13 @@ mod tests {
             .await
             .unwrap();
         assert!(!cancel.success);
-        assert!(cancel
-            .error
-            .as_deref()
-            .unwrap_or_default()
-            .contains("Rate limit exceeded"));
+        assert!(
+            cancel
+                .error
+                .as_deref()
+                .unwrap_or_default()
+                .contains("Rate limit exceeded")
+        );
 
         let get = tool
             .execute(json!({"action": "get", "id": id}))
@@ -719,11 +723,13 @@ mod tests {
             .unwrap();
 
         assert!(!create.success);
-        assert!(create
-            .error
-            .as_deref()
-            .unwrap_or_default()
-            .contains("cron is disabled"));
+        assert!(
+            create
+                .error
+                .as_deref()
+                .unwrap_or_default()
+                .contains("cron is disabled")
+        );
     }
 
     #[tokio::test]
@@ -753,11 +759,13 @@ mod tests {
             .unwrap();
 
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or_default()
-            .contains("not allowed"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or_default()
+                .contains("not allowed")
+        );
     }
 
     #[tokio::test]
@@ -786,11 +794,13 @@ mod tests {
             .await
             .unwrap();
         assert!(!denied.success);
-        assert!(denied
-            .error
-            .as_deref()
-            .unwrap_or_default()
-            .contains("explicit approval"));
+        assert!(
+            denied
+                .error
+                .as_deref()
+                .unwrap_or_default()
+                .contains("explicit approval")
+        );
 
         let approved = tool
             .execute(json!({

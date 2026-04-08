@@ -38,6 +38,10 @@ pub enum TurnEvent {
     },
     /// A tool has returned a result.
     ToolResult { name: String, output: String },
+    /// A clarification request — agent should pause until user responds.
+    /// Serialized by gateway as:
+    /// `{"type":"clarification","category":"...","question":"...","choices":[...]}`
+    Clarification { request: crate::agent::clarify::ClarificationRequest },
 }
 
 pub struct Agent {
@@ -83,6 +87,7 @@ pub struct Agent {
     rbac_identity: Option<crate::security::rbac::CallerIdentity>,
     experience_replay: Option<crate::agent::experience::ExperienceReplay>,
     plan_mode_config: crate::agent::plan_mode::PlanModeConfig,
+    clarification_config: crate::agent::clarify::ClarificationConfig,
 }
 
 pub struct AgentBuilder {
@@ -118,6 +123,7 @@ pub struct AgentBuilder {
     rbac_identity: Option<crate::security::rbac::CallerIdentity>,
     experience_replay: Option<crate::agent::experience::ExperienceReplay>,
     plan_mode_config: Option<crate::agent::plan_mode::PlanModeConfig>,
+    clarification_config: Option<crate::agent::clarify::ClarificationConfig>,
 }
 
 impl AgentBuilder {
@@ -155,6 +161,7 @@ impl AgentBuilder {
             rbac_identity: None,
             experience_replay: None,
             plan_mode_config: None,
+            clarification_config: None,
         }
     }
 
@@ -319,6 +326,14 @@ impl AgentBuilder {
         self
     }
 
+    pub fn clarification_config(
+        mut self,
+        cfg: crate::agent::clarify::ClarificationConfig,
+    ) -> Self {
+        self.clarification_config = Some(cfg);
+        self
+    }
+
     pub fn build(self) -> Result<Agent> {
         let mut tools = self
             .tools
@@ -375,19 +390,14 @@ impl AgentBuilder {
                 .autonomy_level
                 .unwrap_or(crate::security::AutonomyLevel::Supervised),
             activated_tools: self.activated_tools,
-            user_profile_config: self
-                .user_profile_config
-                .unwrap_or_default(),
-            skill_evolution_config: self
-                .skill_evolution_config
-                .unwrap_or_default(),
-            prompt_optimizer_config: self
-                .prompt_optimizer_config
-                .unwrap_or_default(),
+            user_profile_config: self.user_profile_config.unwrap_or_default(),
+            skill_evolution_config: self.skill_evolution_config.unwrap_or_default(),
+            prompt_optimizer_config: self.prompt_optimizer_config.unwrap_or_default(),
             rbac_engine: self.rbac_engine,
             rbac_identity: self.rbac_identity,
             experience_replay: self.experience_replay,
             plan_mode_config: self.plan_mode_config.unwrap_or_default(),
+            clarification_config: self.clarification_config.unwrap_or_default(),
         })
     }
 
@@ -409,10 +419,7 @@ impl AgentBuilder {
         self
     }
 
-    pub fn plan_mode_config(
-        mut self,
-        cfg: crate::agent::plan_mode::PlanModeConfig,
-    ) -> Self {
+    pub fn plan_mode_config(mut self, cfg: crate::agent::plan_mode::PlanModeConfig) -> Self {
         self.plan_mode_config = Some(cfg);
         self
     }
@@ -695,6 +702,7 @@ impl Agent {
             .prompt_optimizer_config(config.prompt_optimizer.clone())
             .experience_replay(experience_replay)
             .plan_mode_config(config.plan_mode.clone())
+            .clarification_config(config.clarification.clone())
             .build()
     }
 
@@ -751,9 +759,8 @@ impl Agent {
         }
 
         // Inject skill evolution guidance if available
-        let skill_engine = crate::agent::skill_evolution::SkillEvolutionEngine::new(
-            &self.skill_evolution_config,
-        );
+        let skill_engine =
+            crate::agent::skill_evolution::SkillEvolutionEngine::new(&self.skill_evolution_config);
         if let Some(skill_text) = skill_engine.prompt_injection() {
             prompt.push_str(&skill_text);
         }
@@ -778,7 +785,8 @@ impl Agent {
                  ordered steps, track progress, and update status as you work.\n\
                  - Mark items [x] completed, [!] failed, or [-] skipped.\n\
                  - Auto-activate planning for queries requiring more than \
-                 ");
+                 ",
+            );
             prompt.push_str(&self.plan_mode_config.auto_activate_threshold.to_string());
             prompt.push_str(" tool calls.\n");
         }
@@ -799,12 +807,8 @@ impl Agent {
         if !replay.collection_enabled() {
             return;
         }
-        let refs: Vec<(&str, bool)> = tool_results
-            .iter()
-            .map(|(n, s)| (n.as_str(), *s))
-            .collect();
-        let dims =
-            crate::agent::self_eval::heuristic_eval(user_query, assistant_response, &refs);
+        let refs: Vec<(&str, bool)> = tool_results.iter().map(|(n, s)| (n.as_str(), *s)).collect();
+        let dims = crate::agent::self_eval::heuristic_eval(user_query, assistant_response, &refs);
         let reward = (dims.aggregate() * 2.0) - 1.0;
         let experience = crate::agent::experience::Experience {
             id: uuid::Uuid::new_v4().to_string(),
@@ -827,9 +831,7 @@ impl Agent {
         if let (Some(engine), Some(identity)) = (&self.rbac_engine, &self.rbac_identity) {
             let auth = engine.authorize_tool(identity, &call.name);
             if !auth.allowed {
-                let reason = auth
-                    .reason
-                    .unwrap_or_else(|| "access denied".to_string());
+                let reason = auth.reason.unwrap_or_else(|| "access denied".to_string());
                 return ToolExecutionResult {
                     name: call.name.clone(),
                     output: format!("RBAC denied: {reason}"),
@@ -870,15 +872,13 @@ impl Agent {
                     });
                     if r.success {
                         let scrubbed = crate::agent::loop_::scrub_credentials(&r.output);
-                        let out = crate::agent::token_optimizer::compress_output(&call.name, &scrubbed);
+                        let out =
+                            crate::agent::token_optimizer::compress_output(&call.name, &scrubbed);
                         (out, true)
                     } else {
                         let reason = r.error.unwrap_or(r.output);
                         (
-                            format!(
-                                "Error: {}",
-                                crate::agent::loop_::scrub_credentials(&reason)
-                            ),
+                            format!("Error: {}", crate::agent::loop_::scrub_credentials(&reason)),
                             false,
                         )
                     }
@@ -889,10 +889,7 @@ impl Agent {
                         duration: start.elapsed(),
                         success: false,
                     });
-                    (
-                        format!("Error executing {}: {e}", call.name),
-                        false,
-                    )
+                    (format!("Error executing {}: {e}", call.name), false)
                 }
             }
         }
@@ -1042,6 +1039,34 @@ impl Agent {
         let mut tool_results_this_turn: Vec<(String, bool)> = Vec::new();
 
         let effective_model = self.classify_model(user_message);
+
+        // Clarification check (same logic as turn_streamed).
+        // In the non-streaming turn(), we surface clarification as a tool result
+        // so it integrates with the existing ask_user pattern.
+        let history_tuples: Vec<(String, String)> = self
+            .history
+            .iter()
+            .filter_map(|m| match m {
+                ConversationMessage::Chat(c) => Some((c.role.clone(), c.content.clone())),
+                _ => None,
+            })
+            .collect();
+
+        let clarification_engine =
+            crate::agent::clarify::ClarificationEngine::new(self.clarification_config.clone());
+        if let crate::agent::clarify::ClarificationResult::Clarify(req) = clarification_engine
+            .check(
+                self.provider.as_ref(),
+                &effective_model,
+                user_message,
+                &history_tuples,
+            )
+            .await
+        {
+            let msg = crate::agent::clarify::format_clarification_message(&req);
+            self.history.pop(); // remove the enriched user message
+            return Ok(msg);
+        }
 
         for _ in 0..self.config.max_tool_iterations {
             let messages = self.tool_dispatcher.to_provider_messages(&self.history);
@@ -1231,8 +1256,51 @@ impl Agent {
         let effective_model = self.classify_model(user_message);
 
         // ── Turn loop ──────────────────────────────────────────────────
+        let clarification_engine =
+            crate::agent::clarify::ClarificationEngine::new(self.clarification_config.clone());
+
         for _ in 0..self.config.max_tool_iterations {
             let messages = self.tool_dispatcher.to_provider_messages(&self.history);
+
+            // Clarification check — intercepts ambiguous input before LLM call.
+            // Only runs on the first iteration (fresh user input), not on tool-result rounds.
+            let history_tuples: Vec<(String, String)> = self
+                .history
+                .iter()
+                .filter_map(|m| match m {
+                    ConversationMessage::Chat(c) => Some((c.role.clone(), c.content.clone())),
+                    _ => None,
+                })
+                .collect();
+
+            if clarification_engine.check(
+                self.provider.as_ref(),
+                &effective_model,
+                user_message,
+                &history_tuples,
+            )
+            .await
+            .requires_clarification()
+            {
+                let result = clarification_engine
+                    .check(
+                        self.provider.as_ref(),
+                        &effective_model,
+                        user_message,
+                        &history_tuples,
+                    )
+                    .await;
+                if let crate::agent::clarify::ClarificationResult::Clarify(req) = result {
+                    let _ = event_tx
+                        .send(TurnEvent::Clarification {
+                            request: req,
+                        })
+                        .await;
+                    // Remove the user message from history since we didn't proceed.
+                    self.history.pop();
+                    return Ok(String::new());
+                }
+            }
 
             // Response cache check (same as turn)
             let cache_key = if self.temperature == 0.0 {
@@ -1752,10 +1820,12 @@ mod tests {
 
         let response = agent.turn("hi").await.unwrap();
         assert_eq!(response, "done");
-        assert!(agent
-            .history()
-            .iter()
-            .any(|msg| matches!(msg, ConversationMessage::ToolResults(_))));
+        assert!(
+            agent
+                .history()
+                .iter()
+                .any(|msg| matches!(msg, ConversationMessage::ToolResults(_)))
+        );
     }
 
     #[tokio::test]
@@ -1814,7 +1884,7 @@ mod tests {
 
     #[tokio::test]
     async fn from_config_passes_extra_headers_to_custom_provider() {
-        use axum::{http::HeaderMap, routing::post, Json, Router};
+        use axum::{Json, Router, http::HeaderMap, routing::post};
         use tempfile::TempDir;
         use tokio::net::TcpListener;
 

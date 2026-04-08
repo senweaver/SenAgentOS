@@ -1,6 +1,6 @@
 use super::traits::{Tool, ToolResult};
-use crate::security::policy::ToolOperation;
 use crate::security::SecurityPolicy;
+use crate::security::policy::ToolOperation;
 use anyhow::Context;
 use async_trait::async_trait;
 use serde_json::json;
@@ -378,11 +378,13 @@ mod tests {
             .await
             .unwrap();
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap()
-            .contains("FAL_API_KEY_TEST_IMAGE_GEN"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap()
+                .contains("FAL_API_KEY_TEST_IMAGE_GEN")
+        );
 
         // Restore if it was set.
         if let Some(val) = original {
@@ -448,11 +450,13 @@ mod tests {
             .await
             .unwrap();
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap()
-            .contains("Invalid model identifier"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap()
+                .contains("Invalid model identifier")
+        );
 
         crate::util::remove_env_var("FAL_API_KEY_TEST_MODEL");
     }
@@ -461,9 +465,11 @@ mod tests {
     fn read_api_key_missing() {
         let result = ImageGenTool::read_api_key("DEFINITELY_NOT_SET_ZC_TEST_12345");
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .contains("DEFINITELY_NOT_SET_ZC_TEST_12345"));
+        assert!(
+            result
+                .unwrap_err()
+                .contains("DEFINITELY_NOT_SET_ZC_TEST_12345")
+        );
     }
 
     #[test]

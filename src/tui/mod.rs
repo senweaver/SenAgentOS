@@ -21,15 +21,15 @@ use std::time::{Duration, Instant};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{
+    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, Wrap},
-    Frame, Terminal,
 };
 
 use crate::bootstrap::BootstrapState;
@@ -252,9 +252,10 @@ impl App {
             config,
             chat_input: String::new(),
             chat_messages: Vec::new(),
-            log_entries: vec![
-                format!("[{}] SenAgentOS TUI started", chrono::Local::now().format("%H:%M:%S")),
-            ],
+            log_entries: vec![format!(
+                "[{}] SenAgentOS TUI started",
+                chrono::Local::now().format("%H:%M:%S")
+            )],
             event_entries: Vec::new(),
             memory_entries: Vec::new(),
             memory_list_state: ListState::default(),
@@ -396,21 +397,34 @@ impl App {
                 self.status_info.cost_today = s.total_cost_usd;
                 self.cost_details.session_cost_usd = s.total_cost_usd;
                 self.cost_details.today_cost_usd = s.total_cost_usd;
-                self.cost_details.total_requests = s.model_usage.values().map(|u| u.request_count).sum();
-                self.cost_details.total_input_tokens = s.model_usage.values().map(|u| u.input_tokens).sum();
-                self.cost_details.total_output_tokens = s.model_usage.values().map(|u| u.output_tokens).sum();
-                self.cost_details.total_cache_read_tokens = s.model_usage.values().map(|u| u.cache_read_input_tokens).sum();
-                self.cost_details.total_cache_write_tokens = s.model_usage.values().map(|u| u.cache_creation_input_tokens).sum();
+                self.cost_details.total_requests =
+                    s.model_usage.values().map(|u| u.request_count).sum();
+                self.cost_details.total_input_tokens =
+                    s.model_usage.values().map(|u| u.input_tokens).sum();
+                self.cost_details.total_output_tokens =
+                    s.model_usage.values().map(|u| u.output_tokens).sum();
+                self.cost_details.total_cache_read_tokens = s
+                    .model_usage
+                    .values()
+                    .map(|u| u.cache_read_input_tokens)
+                    .sum();
+                self.cost_details.total_cache_write_tokens = s
+                    .model_usage
+                    .values()
+                    .map(|u| u.cache_creation_input_tokens)
+                    .sum();
 
-                self.cost_details.model_costs = s.model_usage.iter().map(|(name, u)| {
-                    ModelCostEntry {
+                self.cost_details.model_costs = s
+                    .model_usage
+                    .iter()
+                    .map(|(name, u)| ModelCostEntry {
                         model_name: name.clone(),
                         cost_usd: u.total_cost_usd,
                         requests: u.request_count,
                         input_tokens: u.input_tokens,
                         output_tokens: u.output_tokens,
-                    }
-                }).collect();
+                    })
+                    .collect();
 
                 // Update model in status if overridden
                 if let Some(ref m) = s.main_loop_model_override {
@@ -422,7 +436,8 @@ impl App {
         // Sync commands from ServiceContainer (only once when empty)
         if self.command_entries.is_empty() {
             if let Some(svc) = try_get_services() {
-                self.command_entries = svc.command_registry
+                self.command_entries = svc
+                    .command_registry
                     .list(None)
                     .iter()
                     .map(|c| CommandEntry {
@@ -450,7 +465,7 @@ fn draw(f: &mut Frame, app: &mut App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // tab bar
-            Constraint::Min(0),   // content
+            Constraint::Min(0),    // content
             Constraint::Length(1), // status bar
         ])
         .split(f.area());
@@ -482,10 +497,7 @@ fn draw_tabs(f: &mut Frame, app: &App, area: Rect) {
             } else {
                 theme::tab_inactive()
             };
-            Line::from(Span::styled(
-                format!(" {} ", t.title()),
-                style,
-            ))
+            Line::from(Span::styled(format!(" {} ", t.title()), style))
         })
         .collect();
 
@@ -555,21 +567,26 @@ fn draw_dashboard(f: &mut Frame, app: &App, area: Rect) {
     let cost_info = vec![
         Line::from(vec![
             Span::styled("Today:  ", theme::dim()),
-            Span::styled(format!("${:.4}", app.status_info.cost_today), theme::normal()),
+            Span::styled(
+                format!("${:.4}", app.status_info.cost_today),
+                theme::normal(),
+            ),
         ]),
         Line::from(vec![
             Span::styled("Month:  ", theme::dim()),
-            Span::styled(format!("${:.4}", app.status_info.cost_month), theme::normal()),
+            Span::styled(
+                format!("${:.4}", app.status_info.cost_month),
+                theme::normal(),
+            ),
         ]),
     ];
 
-    let cost_block = Paragraph::new(cost_info)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(" Cost Tracking ")
-                .title_style(theme::title()),
-        );
+    let cost_block = Paragraph::new(cost_info).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(" Cost Tracking ")
+            .title_style(theme::title()),
+    );
     f.render_widget(cost_block, left_chunks[1]);
 
     // Channels
@@ -712,8 +729,8 @@ fn draw_memory(f: &mut Frame, app: &mut App, area: Rect) {
 
 fn draw_channels(f: &mut Frame, _app: &App, area: Rect) {
     let channel_names = [
-        "CLI", "Telegram", "Discord", "Slack", "Matrix", "WhatsApp",
-        "Email", "IRC", "Lark", "DingTalk", "Signal", "Reddit",
+        "CLI", "Telegram", "Discord", "Slack", "Matrix", "WhatsApp", "Email", "IRC", "Lark",
+        "DingTalk", "Signal", "Reddit",
     ];
 
     let items: Vec<ListItem> = channel_names
@@ -938,13 +955,12 @@ fn draw_cost(f: &mut Frame, app: &App, area: Rect) {
         ]),
     ];
 
-    let summary_block = Paragraph::new(summary)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(" Cost Summary ")
-                .title_style(theme::title()),
-        );
+    let summary_block = Paragraph::new(summary).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(" Cost Summary ")
+            .title_style(theme::title()),
+    );
     f.render_widget(summary_block, chunks[0]);
 
     // Per-model breakdown

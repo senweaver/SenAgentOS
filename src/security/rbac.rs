@@ -418,14 +418,25 @@ impl RbacEngine {
 
     fn resolve_capabilities(&self, identity: &CallerIdentity) -> Vec<Capability> {
         if identity.is_admin() {
-            return vec![Capability::ToolAll, Capability::MemoryWrite, Capability::KnowledgeWrite, Capability::AgentSpawn, Capability::LlmCall, Capability::EnvRead];
+            return vec![
+                Capability::ToolAll,
+                Capability::MemoryWrite,
+                Capability::KnowledgeWrite,
+                Capability::AgentSpawn,
+                Capability::LlmCall,
+                Capability::EnvRead,
+            ];
         }
 
         let mut caps = Vec::new();
         for role_name in &identity.roles {
             let key = role_name.trim().to_ascii_lowercase();
             if let Some(role_def) = self.roles.get(&key) {
-                if role_def.allowed_tools.iter().any(|t| t.eq_ignore_ascii_case("all")) {
+                if role_def
+                    .allowed_tools
+                    .iter()
+                    .any(|t| t.eq_ignore_ascii_case("all"))
+                {
                     caps.push(Capability::ToolAll);
                 } else {
                     for tool in &role_def.allowed_tools {
@@ -710,24 +721,43 @@ fn builtin_roles() -> Vec<RoleDefinition> {
     vec![
         RoleDefinition {
             name: "admin".into(),
-            description: "Full system access. Can use all tools, manage users, and configure the system.".into(),
+            description:
+                "Full system access. Can use all tools, manage users, and configure the system."
+                    .into(),
             allowed_tools: vec!["all".into()],
             allowed_workspaces: vec!["all".into()],
             builtin: true,
         },
         RoleDefinition {
             name: "operator".into(),
-            description: "Operational access. Can use most tools except security-sensitive ones.".into(),
+            description: "Operational access. Can use most tools except security-sensitive ones."
+                .into(),
             allowed_tools: vec![
-                "shell".into(), "file_read".into(), "file_write".into(), "file_edit".into(),
-                "glob_search".into(), "content_search".into(), "dir_list".into(),
-                "web_search".into(), "multi_search".into(), "web_fetch".into(),
-                "youtube_search".into(), "github_search".into(), "reddit_search".into(),
-                "image_search".into(), "text_browser".into(),
-                "memory_store".into(), "memory_recall".into(),
-                "git_operations".into(), "calculator".into(), "weather".into(),
-                "delegate".into(), "llm_task".into(), "present_files".into(),
-                "view_image".into(), "pdf_read".into(),
+                "shell".into(),
+                "file_read".into(),
+                "file_write".into(),
+                "file_edit".into(),
+                "glob_search".into(),
+                "content_search".into(),
+                "dir_list".into(),
+                "web_search".into(),
+                "multi_search".into(),
+                "web_fetch".into(),
+                "youtube_search".into(),
+                "github_search".into(),
+                "reddit_search".into(),
+                "image_search".into(),
+                "text_browser".into(),
+                "memory_store".into(),
+                "memory_recall".into(),
+                "git_operations".into(),
+                "calculator".into(),
+                "weather".into(),
+                "delegate".into(),
+                "llm_task".into(),
+                "present_files".into(),
+                "view_image".into(),
+                "pdf_read".into(),
             ],
             allowed_workspaces: vec!["all".into()],
             builtin: true,
@@ -736,26 +766,50 @@ fn builtin_roles() -> Vec<RoleDefinition> {
             name: "developer".into(),
             description: "Developer access. File operations, search, and development tools.".into(),
             allowed_tools: vec![
-                "shell".into(), "file_read".into(), "file_write".into(), "file_edit".into(),
-                "glob_search".into(), "content_search".into(), "dir_list".into(),
-                "git_operations".into(), "web_search".into(), "web_fetch".into(),
-                "github_search".into(), "calculator".into(),
-                "memory_store".into(), "memory_recall".into(),
-                "present_files".into(), "view_image".into(), "pdf_read".into(),
+                "shell".into(),
+                "file_read".into(),
+                "file_write".into(),
+                "file_edit".into(),
+                "glob_search".into(),
+                "content_search".into(),
+                "dir_list".into(),
+                "git_operations".into(),
+                "web_search".into(),
+                "web_fetch".into(),
+                "github_search".into(),
+                "calculator".into(),
+                "memory_store".into(),
+                "memory_recall".into(),
+                "present_files".into(),
+                "view_image".into(),
+                "pdf_read".into(),
             ],
             allowed_workspaces: vec!["all".into()],
             builtin: true,
         },
         RoleDefinition {
             name: "analyst".into(),
-            description: "Read and search access. Can search, browse, and analyze but not modify.".into(),
+            description: "Read and search access. Can search, browse, and analyze but not modify."
+                .into(),
             allowed_tools: vec![
-                "file_read".into(), "glob_search".into(), "content_search".into(), "dir_list".into(),
-                "web_search".into(), "multi_search".into(), "web_fetch".into(),
-                "youtube_search".into(), "github_search".into(), "reddit_search".into(),
-                "image_search".into(), "text_browser".into(),
-                "memory_recall".into(), "calculator".into(), "weather".into(),
-                "present_files".into(), "view_image".into(), "pdf_read".into(),
+                "file_read".into(),
+                "glob_search".into(),
+                "content_search".into(),
+                "dir_list".into(),
+                "web_search".into(),
+                "multi_search".into(),
+                "web_fetch".into(),
+                "youtube_search".into(),
+                "github_search".into(),
+                "reddit_search".into(),
+                "image_search".into(),
+                "text_browser".into(),
+                "memory_recall".into(),
+                "calculator".into(),
+                "weather".into(),
+                "present_files".into(),
+                "view_image".into(),
+                "pdf_read".into(),
             ],
             allowed_workspaces: vec!["all".into()],
             builtin: true,
@@ -764,8 +818,11 @@ fn builtin_roles() -> Vec<RoleDefinition> {
             name: "viewer".into(),
             description: "Read-only access. Can only read files and recall memory.".into(),
             allowed_tools: vec![
-                "file_read".into(), "memory_recall".into(), "calculator".into(),
-                "weather".into(), "present_files".into(),
+                "file_read".into(),
+                "memory_recall".into(),
+                "calculator".into(),
+                "weather".into(),
+                "present_files".into(),
             ],
             allowed_workspaces: vec![],
             builtin: true,
@@ -843,7 +900,10 @@ mod tests {
         };
 
         let result = engine.authorize_tool(&identity, "file_read");
-        assert!(result.allowed, "default role (viewer) should allow file_read");
+        assert!(
+            result.allowed,
+            "default role (viewer) should allow file_read"
+        );
 
         let result = engine.authorize_tool(&identity, "shell");
         assert!(!result.allowed, "default role (viewer) should deny shell");
@@ -903,7 +963,10 @@ mod tests {
 
         let identity = CallerIdentity::from_channel("telegram", "12345", Some("John"));
         let result = engine.authorize_tool(&identity, "shell");
-        assert!(result.allowed, "telegram user bound to operator should access shell");
+        assert!(
+            result.allowed,
+            "telegram user bound to operator should access shell"
+        );
     }
 
     #[test]

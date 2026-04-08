@@ -9,11 +9,13 @@
 //! for all token-saving operations inspired by RTK.
 
 use super::token_budget::{TokenBudgetConfig, TokenBudgetManager};
-use super::tool_output_compressor::{CompressionResult, ToolOutputCompressor, ToolOutputCompressorConfig};
+use super::tool_output_compressor::{
+    CompressionResult, ToolOutputCompressor, ToolOutputCompressorConfig,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Unified token optimization engine.
 pub struct TokenOptimizer {
@@ -101,11 +103,7 @@ impl TokenOptimizer {
     }
 
     /// Check if history compression should be triggered based on token budget.
-    pub fn should_compress_history(
-        &self,
-        system_prompt: &str,
-        history_text_total: usize,
-    ) -> bool {
+    pub fn should_compress_history(&self, system_prompt: &str, history_text_total: usize) -> bool {
         let sys_tokens = TokenBudgetManager::estimate_tokens(system_prompt);
         let status = self.budget.check_status(sys_tokens, history_text_total / 4);
         status.should_compress
@@ -127,12 +125,9 @@ impl TokenOptimizer {
     }
 
     /// Suggest how many messages to keep in history.
-    pub fn suggest_max_messages(
-        &self,
-        current_tokens: usize,
-        message_count: usize,
-    ) -> usize {
-        self.budget.suggest_max_messages(current_tokens, message_count)
+    pub fn suggest_max_messages(&self, current_tokens: usize, message_count: usize) -> usize {
+        self.budget
+            .suggest_max_messages(current_tokens, message_count)
     }
 
     /// Get a report of all optimization activity.
@@ -146,7 +141,9 @@ impl TokenOptimizer {
             0.0
         };
 
-        let budget_status = self.budget.check_status(system_prompt_tokens, history_tokens);
+        let budget_status = self
+            .budget
+            .check_status(system_prompt_tokens, history_tokens);
 
         OptimizationReport {
             total_tool_calls: self.stats.total_tool_calls.load(Ordering::Relaxed),

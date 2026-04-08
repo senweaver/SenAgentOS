@@ -93,16 +93,17 @@ impl AutoDreamService {
             .iter()
             .filter(|t| t.enabled)
             .filter(|t| match &t.trigger {
-                DreamTrigger::Idle { after_idle_ms } => is_idle && {
-                    t.last_run_ms
-                        .map(|lr| now_ms.saturating_sub(lr) >= *after_idle_ms)
-                        .unwrap_or(true)
-                },
-                DreamTrigger::Interval { every_ms } => {
-                    t.last_run_ms
-                        .map(|lr| now_ms.saturating_sub(lr) >= *every_ms)
-                        .unwrap_or(true)
+                DreamTrigger::Idle { after_idle_ms } => {
+                    is_idle && {
+                        t.last_run_ms
+                            .map(|lr| now_ms.saturating_sub(lr) >= *after_idle_ms)
+                            .unwrap_or(true)
+                    }
                 }
+                DreamTrigger::Interval { every_ms } => t
+                    .last_run_ms
+                    .map(|lr| now_ms.saturating_sub(lr) >= *every_ms)
+                    .unwrap_or(true),
                 DreamTrigger::Once { at_ms } => now_ms >= *at_ms && t.run_count == 0,
                 DreamTrigger::OnSessionEnd => false, // handled separately
             })

@@ -472,9 +472,7 @@ mod tests {
         let bb = Blackboard::new();
         bb.write("key", json!(1), "a1", "ns");
 
-        let v = bb
-            .compare_and_swap("key", json!(2), "a2", "ns", 1)
-            .unwrap();
+        let v = bb.compare_and_swap("key", json!(2), "a2", "ns", 1).unwrap();
         assert_eq!(v, 2);
     }
 

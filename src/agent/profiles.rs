@@ -266,19 +266,14 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let manager = ProfileManager::new(dir.path());
 
-        let profile =
-            AgentProfile::new("with-soul").with_system_prompt("I have a soul.");
+        let profile = AgentProfile::new("with-soul").with_system_prompt("I have a soul.");
         manager.save(&profile).unwrap();
 
         // Overwrite agent.toml with empty system_prompt so SOUL.md fallback kicks in
         let mut bare = AgentProfile::new("with-soul");
         bare.system_prompt = String::new();
         let toml_content = toml::to_string_pretty(&bare).unwrap();
-        std::fs::write(
-            dir.path().join("agents/with-soul/agent.toml"),
-            toml_content,
-        )
-        .unwrap();
+        std::fs::write(dir.path().join("agents/with-soul/agent.toml"), toml_content).unwrap();
 
         let loaded = manager.get("with-soul").unwrap().unwrap();
         assert_eq!(loaded.system_prompt, "I have a soul.");

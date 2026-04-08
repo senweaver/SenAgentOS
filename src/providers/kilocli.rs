@@ -42,7 +42,7 @@ use async_trait::async_trait;
 use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 
 /// Environment variable for overriding the path to the `kilo` binary.
 pub const KILO_CLI_PATH_ENV: &str = "KILO_CLI_PATH";
@@ -308,9 +308,10 @@ mod tests {
     #[test]
     fn validate_temperature_rejects_custom_value() {
         let err = KiloCliProvider::validate_temperature(0.2).unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("temperature unsupported by KiloCLI"));
+        assert!(
+            err.to_string()
+                .contains("temperature unsupported by KiloCLI")
+        );
     }
 
     #[tokio::test]

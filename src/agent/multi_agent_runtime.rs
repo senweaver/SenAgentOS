@@ -210,9 +210,12 @@ mod tests {
         assert!(rt.registry.assign_task("worker-1", &task.id));
 
         // Write shared state
-        rt.blackboard
-            .inner()
-            .write("progress", serde_json::json!({"step": 1}), "worker-1", "project");
+        rt.blackboard.inner().write(
+            "progress",
+            serde_json::json!({"step": 1}),
+            "worker-1",
+            "project",
+        );
 
         // Complete task
         rt.task_queue.complete(&task.id, "Tests written");
@@ -246,8 +249,14 @@ mod tests {
         let rt = MultiAgentRuntime::new();
 
         // Test lock acquisition
-        let result = rt.coordinator.locks().acquire("resource-1", "agent-1", "editing");
-        assert!(matches!(result, crate::agent::coordination::LockResult::Acquired));
+        let result = rt
+            .coordinator
+            .locks()
+            .acquire("resource-1", "agent-1", "editing");
+        assert!(matches!(
+            result,
+            crate::agent::coordination::LockResult::Acquired
+        ));
 
         // Test release (returns bool, not LockResult)
         let released = rt.coordinator.locks().release("resource-1", "agent-1");

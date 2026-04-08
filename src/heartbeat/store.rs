@@ -8,7 +8,7 @@
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::path::{Path, PathBuf};
 
 const MAX_OUTPUT_BYTES: usize = 16 * 1024;

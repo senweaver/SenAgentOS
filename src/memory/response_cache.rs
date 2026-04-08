@@ -11,7 +11,7 @@
 use anyhow::Result;
 use chrono::{Duration, Local};
 use parking_lot::Mutex;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

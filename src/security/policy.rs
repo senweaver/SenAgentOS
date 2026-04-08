@@ -619,11 +619,7 @@ fn attached_short_option_value(token: &str) -> Option<&str> {
         return None;
     }
     let value = body[1..].trim_start_matches('=').trim();
-    if value.is_empty() {
-        None
-    } else {
-        Some(value)
-    }
+    if value.is_empty() { None } else { Some(value) }
 }
 
 fn redirection_target(token: &str) -> Option<&str> {
@@ -1553,9 +1549,10 @@ mod tests {
     #[test]
     fn enforce_tool_operation_read_allowed_in_readonly_mode() {
         let p = readonly_policy();
-        assert!(p
-            .enforce_tool_operation(ToolOperation::Read, "memory_recall")
-            .is_ok());
+        assert!(
+            p.enforce_tool_operation(ToolOperation::Read, "memory_recall")
+                .is_ok()
+        );
     }
 
     #[test]
@@ -3112,13 +3109,15 @@ mod tests {
             workspace_only: false,
             ..SecurityPolicy::default()
         };
-        assert!(p
-            .validate_command_execution("rm -rf /tmp/test", true)
-            .is_ok());
+        assert!(
+            p.validate_command_execution("rm -rf /tmp/test", true)
+                .is_ok()
+        );
         assert!(p.validate_command_execution("nohup firefox", true).is_ok());
-        assert!(p
-            .validate_command_execution("ls /usr/bin/firefox", true)
-            .is_ok());
+        assert!(
+            p.validate_command_execution("ls /usr/bin/firefox", true)
+                .is_ok()
+        );
     }
 
     #[test]

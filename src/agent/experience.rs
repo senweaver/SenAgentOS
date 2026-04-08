@@ -8,11 +8,11 @@
 //! (few-shot learning from past successes/failures).
 
 use chrono::{DateTime, Utc};
+use parking_lot::RwLock;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::sync::Arc;
-use parking_lot::RwLock;
 
 /// Configuration for the experience replay system.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -38,11 +38,21 @@ pub struct ExperienceConfig {
     pub max_inject_chars: usize,
 }
 
-fn default_capacity() -> usize { 500 }
-fn default_min_reward() -> f64 { -0.8 }
-fn default_few_shot_count() -> usize { 2 }
-fn default_anti_example_count() -> usize { 1 }
-fn default_max_inject_chars() -> usize { 2000 }
+fn default_capacity() -> usize {
+    500
+}
+fn default_min_reward() -> f64 {
+    -0.8
+}
+fn default_few_shot_count() -> usize {
+    2
+}
+fn default_anti_example_count() -> usize {
+    1
+}
+fn default_max_inject_chars() -> usize {
+    2000
+}
 
 impl Default for ExperienceConfig {
     fn default() -> Self {
@@ -128,17 +138,11 @@ impl ExperienceReplay {
     }
 
     /// Get top-N experiences by reward, optionally filtered by category.
-    pub fn top_experiences(
-        &self,
-        n: usize,
-        category: Option<&str>,
-    ) -> Vec<Experience> {
+    pub fn top_experiences(&self, n: usize, category: Option<&str>) -> Vec<Experience> {
         let buf = self.buffer.read();
         let mut filtered: Vec<&Experience> = buf
             .iter()
-            .filter(|e| {
-                category.map_or(true, |c| e.query_category == c)
-            })
+            .filter(|e| category.map_or(true, |c| e.query_category == c))
             .collect();
 
         filtered.sort_by(|a, b| {
@@ -151,18 +155,11 @@ impl ExperienceReplay {
     }
 
     /// Get worst-N experiences by reward (anti-examples for learning).
-    pub fn worst_experiences(
-        &self,
-        n: usize,
-        category: Option<&str>,
-    ) -> Vec<Experience> {
+    pub fn worst_experiences(&self, n: usize, category: Option<&str>) -> Vec<Experience> {
         let buf = self.buffer.read();
         let mut filtered: Vec<&Experience> = buf
             .iter()
-            .filter(|e| {
-                category.map_or(true, |c| e.query_category == c)
-                    && e.reward < 0.0
-            })
+            .filter(|e| category.map_or(true, |c| e.query_category == c) && e.reward < 0.0)
             .collect();
 
         filtered.sort_by(|a, b| {

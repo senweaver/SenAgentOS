@@ -5,7 +5,7 @@
 // RemoteAgentTask — represents a task running on a remote agent instance.
 // Mirrors claude-code-typescript-src`tasks/RemoteAgentTask/`.
 
-use super::types::{Task, TaskId, TaskState, TaskType, TaskHandle, generate_task_id};
+use super::types::{Task, TaskHandle, TaskId, TaskState, TaskType, generate_task_id};
 use tokio::sync::watch;
 
 pub struct RemoteAgentSpawnInput {

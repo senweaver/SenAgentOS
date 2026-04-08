@@ -300,9 +300,13 @@ impl AgentRegistry {
             .values()
             .filter(|a| a.is_available() && a.has_capability(capability))
             .max_by(|a, b| {
-                let score_a = a.proficiency_for(capability) * (1.0 - a.current_load as f64 / a.max_concurrency.max(1) as f64);
-                let score_b = b.proficiency_for(capability) * (1.0 - b.current_load as f64 / b.max_concurrency.max(1) as f64);
-                score_a.partial_cmp(&score_b).unwrap_or(std::cmp::Ordering::Equal)
+                let score_a = a.proficiency_for(capability)
+                    * (1.0 - a.current_load as f64 / a.max_concurrency.max(1) as f64);
+                let score_b = b.proficiency_for(capability)
+                    * (1.0 - b.current_load as f64 / b.max_concurrency.max(1) as f64);
+                score_a
+                    .partial_cmp(&score_b)
+                    .unwrap_or(std::cmp::Ordering::Equal)
             })
             .cloned()
     }

@@ -88,10 +88,7 @@ impl Tool for RedditSearchTool {
             .get("sort")
             .and_then(|v| v.as_str())
             .unwrap_or("relevance");
-        let time = args
-            .get("time")
-            .and_then(|v| v.as_str())
-            .unwrap_or("all");
+        let time = args.get("time").and_then(|v| v.as_str()).unwrap_or("all");
         let max = args
             .get("max_results")
             .and_then(|v| v.as_u64())
@@ -183,14 +180,8 @@ impl Tool for RedditSearchTool {
                 .get("num_comments")
                 .and_then(|v| v.as_u64())
                 .unwrap_or(0);
-            let permalink = data
-                .get("permalink")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            let selftext = data
-                .get("selftext")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let permalink = data.get("permalink").and_then(|v| v.as_str()).unwrap_or("");
+            let selftext = data.get("selftext").and_then(|v| v.as_str()).unwrap_or("");
             let created = data
                 .get("created_utc")
                 .and_then(|v| v.as_f64())

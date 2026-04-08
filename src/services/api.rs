@@ -94,8 +94,8 @@ impl Default for RetryConfig {
 
 /// Compute delay for attempt `n` (0-indexed).
 pub fn retry_delay(config: &RetryConfig, attempt: u32) -> Duration {
-    let base = config.initial_delay.as_millis() as f64
-        * config.backoff_multiplier.powi(attempt as i32);
+    let base =
+        config.initial_delay.as_millis() as f64 * config.backoff_multiplier.powi(attempt as i32);
     let capped = base.min(config.max_delay.as_millis() as f64);
     let jitter = rand::random::<f64>() * 0.2 * capped;
     Duration::from_millis((capped + jitter) as u64)

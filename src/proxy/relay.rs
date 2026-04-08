@@ -35,10 +35,7 @@ impl ProxyRelay {
     pub fn proxy_headers(&self) -> std::collections::HashMap<String, String> {
         let mut headers = self.config.extra_headers.clone();
         if let Some(ref token) = self.config.auth_token {
-            headers.insert(
-                "Proxy-Authorization".to_string(),
-                format!("Bearer {token}"),
-            );
+            headers.insert("Proxy-Authorization".to_string(), format!("Bearer {token}"));
         }
         headers
     }

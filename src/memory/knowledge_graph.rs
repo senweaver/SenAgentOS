@@ -11,7 +11,7 @@
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use parking_lot::Mutex;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -307,7 +307,11 @@ impl KnowledgeGraph {
         if tags.is_empty() {
             return Ok(Vec::new());
         }
-        let like_clauses: Vec<String> = tags.iter().enumerate().map(|(i, _)| format!("tags LIKE ?{}", i + 1)).collect();
+        let like_clauses: Vec<String> = tags
+            .iter()
+            .enumerate()
+            .map(|(i, _)| format!("tags LIKE ?{}", i + 1))
+            .collect();
         let sql = format!(
             "SELECT id, node_type, title, content, tags, created_at, updated_at, source_project
              FROM nodes WHERE {} ORDER BY updated_at DESC",
@@ -315,7 +319,10 @@ impl KnowledgeGraph {
         );
         let mut stmt = conn.prepare(&sql)?;
         let like_params: Vec<String> = tags.iter().map(|t| format!("%{}%", t)).collect();
-        let param_refs: Vec<&dyn rusqlite::types::ToSql> = like_params.iter().map(|p| p as &dyn rusqlite::types::ToSql).collect();
+        let param_refs: Vec<&dyn rusqlite::types::ToSql> = like_params
+            .iter()
+            .map(|p| p as &dyn rusqlite::types::ToSql)
+            .collect();
         let mut rows = stmt.query(param_refs.as_slice())?;
         let mut results = Vec::new();
         while let Some(row) = rows.next()? {
@@ -456,15 +463,23 @@ impl KnowledgeGraph {
             let mut edge_stmt = conn.prepare(&edge_sql)?;
             let ids_vec: Vec<String> = node_ids.iter().cloned().collect();
             let mut params: Vec<&dyn rusqlite::types::ToSql> = Vec::new();
-            for id in &ids_vec { params.push(id); }
-            for id in &ids_vec { params.push(id); }
+            for id in &ids_vec {
+                params.push(id);
+            }
+            for id in &ids_vec {
+                params.push(id);
+            }
             let mut edge_rows = edge_stmt.query(params.as_slice())?;
             while let Some(row) = edge_rows.next()? {
                 let from_id: String = row.get(0)?;
                 let to_id: String = row.get(1)?;
                 let relation_str: String = row.get(2)?;
                 let relation = Relation::parse(&relation_str)?;
-                edges.push(KnowledgeEdge { from_id, to_id, relation });
+                edges.push(KnowledgeEdge {
+                    from_id,
+                    to_id,
+                    relation,
+                });
             }
         }
 
@@ -660,15 +675,19 @@ mod tests {
 
         // Outbound: from id1 → id2
         let related = graph.find_related(&id1).unwrap();
-        assert!(related
-            .iter()
-            .any(|(n, r)| n.id == id2 && *r == Relation::Uses));
+        assert!(
+            related
+                .iter()
+                .any(|(n, r)| n.id == id2 && *r == Relation::Uses)
+        );
 
         // Inbound: id2 sees id1 via the same edge
         let related = graph.find_related(&id2).unwrap();
-        assert!(related
-            .iter()
-            .any(|(n, r)| n.id == id1 && *r == Relation::Uses));
+        assert!(
+            related
+                .iter()
+                .any(|(n, r)| n.id == id1 && *r == Relation::Uses)
+        );
     }
 
     #[test]

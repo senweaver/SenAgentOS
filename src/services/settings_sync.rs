@@ -99,7 +99,9 @@ impl SettingsSyncService {
                 ConflictStrategy::Manual => false,
             };
             if should_apply {
-                inner.pending_changes.insert(key.clone(), remote_value.clone());
+                inner
+                    .pending_changes
+                    .insert(key.clone(), remote_value.clone());
                 applied_keys.push(key.clone());
             }
         }

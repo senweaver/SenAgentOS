@@ -7,7 +7,7 @@
 //! deny-by-default policy model. All policy decisions are audit-logged.
 
 use super::nevis::NevisIdentity;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -258,12 +258,16 @@ mod tests {
         let identity = identity_with_roles(vec!["admin"]);
 
         assert!(policy.evaluate_tool_access(&identity, "shell").is_allowed());
-        assert!(policy
-            .evaluate_tool_access(&identity, "file_read")
-            .is_allowed());
-        assert!(policy
-            .evaluate_tool_access(&identity, "any_tool_name")
-            .is_allowed());
+        assert!(
+            policy
+                .evaluate_tool_access(&identity, "file_read")
+                .is_allowed()
+        );
+        assert!(
+            policy
+                .evaluate_tool_access(&identity, "any_tool_name")
+                .is_allowed()
+        );
     }
 
     #[test]
@@ -271,12 +275,16 @@ mod tests {
         let policy = IamPolicy::from_mappings(&test_mappings()).unwrap();
         let identity = identity_with_roles(vec!["admin"]);
 
-        assert!(policy
-            .evaluate_workspace_access(&identity, "production")
-            .is_allowed());
-        assert!(policy
-            .evaluate_workspace_access(&identity, "any_workspace")
-            .is_allowed());
+        assert!(
+            policy
+                .evaluate_workspace_access(&identity, "production")
+                .is_allowed()
+        );
+        assert!(
+            policy
+                .evaluate_workspace_access(&identity, "any_workspace")
+                .is_allowed()
+        );
     }
 
     #[test]
@@ -285,12 +293,16 @@ mod tests {
         let identity = identity_with_roles(vec!["operator"]);
 
         assert!(policy.evaluate_tool_access(&identity, "shell").is_allowed());
-        assert!(policy
-            .evaluate_tool_access(&identity, "file_read")
-            .is_allowed());
-        assert!(!policy
-            .evaluate_tool_access(&identity, "browser")
-            .is_allowed());
+        assert!(
+            policy
+                .evaluate_tool_access(&identity, "file_read")
+                .is_allowed()
+        );
+        assert!(
+            !policy
+                .evaluate_tool_access(&identity, "browser")
+                .is_allowed()
+        );
     }
 
     #[test]
@@ -298,15 +310,21 @@ mod tests {
         let policy = IamPolicy::from_mappings(&test_mappings()).unwrap();
         let identity = identity_with_roles(vec!["operator"]);
 
-        assert!(policy
-            .evaluate_workspace_access(&identity, "production")
-            .is_allowed());
-        assert!(policy
-            .evaluate_workspace_access(&identity, "staging")
-            .is_allowed());
-        assert!(!policy
-            .evaluate_workspace_access(&identity, "development")
-            .is_allowed());
+        assert!(
+            policy
+                .evaluate_workspace_access(&identity, "production")
+                .is_allowed()
+        );
+        assert!(
+            policy
+                .evaluate_workspace_access(&identity, "staging")
+                .is_allowed()
+        );
+        assert!(
+            !policy
+                .evaluate_workspace_access(&identity, "development")
+                .is_allowed()
+        );
     }
 
     #[test]
@@ -314,16 +332,22 @@ mod tests {
         let policy = IamPolicy::from_mappings(&test_mappings()).unwrap();
         let identity = identity_with_roles(vec!["viewer"]);
 
-        assert!(policy
-            .evaluate_tool_access(&identity, "file_read")
-            .is_allowed());
-        assert!(policy
-            .evaluate_tool_access(&identity, "memory_search")
-            .is_allowed());
+        assert!(
+            policy
+                .evaluate_tool_access(&identity, "file_read")
+                .is_allowed()
+        );
+        assert!(
+            policy
+                .evaluate_tool_access(&identity, "memory_search")
+                .is_allowed()
+        );
         assert!(!policy.evaluate_tool_access(&identity, "shell").is_allowed());
-        assert!(!policy
-            .evaluate_tool_access(&identity, "file_write")
-            .is_allowed());
+        assert!(
+            !policy
+                .evaluate_tool_access(&identity, "file_write")
+                .is_allowed()
+        );
     }
 
     #[test]
@@ -332,9 +356,11 @@ mod tests {
         let identity = identity_with_roles(vec!["unknown_role"]);
 
         assert!(!policy.evaluate_tool_access(&identity, "shell").is_allowed());
-        assert!(!policy
-            .evaluate_workspace_access(&identity, "production")
-            .is_allowed());
+        assert!(
+            !policy
+                .evaluate_workspace_access(&identity, "production")
+                .is_allowed()
+        );
     }
 
     #[test]
@@ -342,9 +368,11 @@ mod tests {
         let policy = IamPolicy::from_mappings(&test_mappings()).unwrap();
         let identity = identity_with_roles(vec![]);
 
-        assert!(!policy
-            .evaluate_tool_access(&identity, "file_read")
-            .is_allowed());
+        assert!(
+            !policy
+                .evaluate_tool_access(&identity, "file_read")
+                .is_allowed()
+        );
     }
 
     #[test]
@@ -353,9 +381,11 @@ mod tests {
         let identity = identity_with_roles(vec!["viewer", "operator"]);
 
         // viewer has file_read, operator has shell — both should be accessible
-        assert!(policy
-            .evaluate_tool_access(&identity, "file_read")
-            .is_allowed());
+        assert!(
+            policy
+                .evaluate_tool_access(&identity, "file_read")
+                .is_allowed()
+        );
         assert!(policy.evaluate_tool_access(&identity, "shell").is_allowed());
     }
 
@@ -373,9 +403,11 @@ mod tests {
         let identity = identity_with_roles(vec!["operator"]);
 
         assert!(policy.evaluate_tool_access(&identity, "SHELL").is_allowed());
-        assert!(policy
-            .evaluate_tool_access(&identity, "File_Read")
-            .is_allowed());
+        assert!(
+            policy
+                .evaluate_tool_access(&identity, "File_Read")
+                .is_allowed()
+        );
     }
 
     #[test]

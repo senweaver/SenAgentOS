@@ -18,6 +18,7 @@
 //! To add a new tool, implement [`Tool`] in a new submodule and register it in
 //! [`all_tools_with_runtime`]. See `AGENTS.md` §7.3 for the full change playbook.
 
+pub mod agent_tool;
 pub mod ask_user;
 pub mod backup_tool;
 pub mod browser;
@@ -104,6 +105,7 @@ pub mod security_ops;
 pub mod sessions;
 pub mod setup_agent;
 pub mod shell;
+pub mod skill_discovery;
 pub mod skill_http;
 pub mod skill_tool;
 pub mod sop_advance;
@@ -150,6 +152,8 @@ pub use data_management::DataManagementTool;
 pub use delegate::DelegateTool;
 pub use dir_list::DirListTool;
 // Re-exported for downstream consumers of background delegation results.
+#[allow(unused_imports)]
+pub use agent_tool::{AgentSpawnOptions, AgentSpawnResult, AgentTool};
 #[allow(unused_imports)]
 pub use delegate::{BackgroundDelegateResult, BackgroundTaskStatus};
 pub use discord_search::DiscordSearchTool;
@@ -211,6 +215,10 @@ pub use sessions::{SessionsHistoryTool, SessionsListTool, SessionsSendTool};
 pub use setup_agent::SetupAgentTool;
 pub use shell::ShellTool;
 #[allow(unused_imports)]
+pub use skill_discovery::{
+    Skill, SkillCategory, SkillCommand, SkillDiscoveryResult, SkillDiscoveryTool, SkillManager,
+};
+#[allow(unused_imports)]
 pub use skill_http::SkillHttpTool;
 #[allow(unused_imports)]
 pub use skill_tool::SkillShellTool;
@@ -236,7 +244,7 @@ pub use youtube_search::YouTubeSearchTool;
 use crate::config::{Config, DelegateAgentConfig};
 use crate::memory::Memory;
 use crate::runtime::{NativeRuntime, RuntimeAdapter};
-use crate::security::{create_sandbox, SecurityPolicy};
+use crate::security::{SecurityPolicy, create_sandbox};
 use async_trait::async_trait;
 use parking_lot::RwLock;
 use std::collections::HashMap;

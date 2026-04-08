@@ -2,7 +2,7 @@
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
 use super::traits::{Tool, ToolResult};
-use super::web_search_provider_routing::{resolve_web_search_provider, WebSearchProviderRoute};
+use super::web_search_provider_routing::{WebSearchProviderRoute, resolve_web_search_provider};
 use async_trait::async_trait;
 use regex::Regex;
 use serde_json::json;
@@ -611,10 +611,12 @@ mod tests {
         );
         let result = tool.execute(json!({"query": "test"})).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("SearXNG instance URL not configured"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("SearXNG instance URL not configured")
+        );
     }
 
     #[test]
@@ -655,10 +657,12 @@ mod tests {
         let json = serde_json::json!({"error": "bad request"});
         let result = tool.parse_searxng_results(&json, "test");
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid SearXNG API response"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid SearXNG API response")
+        );
     }
 
     #[test]

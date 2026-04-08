@@ -11,8 +11,8 @@ use std::net::IpAddr;
 use std::time::Duration;
 
 use crate::gateway::a2a::types::{
-    AgentCard, CancelTaskRequest, CancelTaskResponse,
-    ListAgentsResponse, SendTaskRequest, SendTaskResponse, TaskId, A2aTask,
+    A2aTask, AgentCard, CancelTaskRequest, CancelTaskResponse, ListAgentsResponse, SendTaskRequest,
+    SendTaskResponse, TaskId,
 };
 
 /// HTTP client for A2A protocol operations.
@@ -62,33 +62,36 @@ impl A2aClient {
             });
         }
 
-        let host = parsed.host_str().ok_or_else(|| A2aClientError::InvalidUrl {
-            url: url.to_string(),
-            message: "URL must have a host".to_string(),
-        })?;
+        let host = parsed
+            .host_str()
+            .ok_or_else(|| A2aClientError::InvalidUrl {
+                url: url.to_string(),
+                message: "URL must have a host".to_string(),
+            })?;
 
-fn is_private_v4(v4: std::net::Ipv4Addr) -> bool {
-    let [a, b, _c, _d] = v4.octets();
-    (a == 10) || (a == 172 && (16..=31).contains(&b)) || (a == 192 && b == 168)
-}
+        fn is_private_v4(v4: std::net::Ipv4Addr) -> bool {
+            let [a, b, _c, _d] = v4.octets();
+            (a == 10) || (a == 172 && (16..=31).contains(&b)) || (a == 192 && b == 168)
+        }
 
-fn is_private_ip(ip: IpAddr) -> bool {
-    match ip {
-        IpAddr::V4(v4) => is_private_v4(v4),
-        IpAddr::V6(_) => false,
-    }
-}
+        fn is_private_ip(ip: IpAddr) -> bool {
+            match ip {
+                IpAddr::V4(v4) => is_private_v4(v4),
+                IpAddr::V6(_) => false,
+            }
+        }
 
-fn is_link_local_ip(ip: IpAddr) -> bool {
-    match ip {
-        IpAddr::V4(v4) => v4.is_link_local(),
-        IpAddr::V6(_) => false,
-    }
-}
+        fn is_link_local_ip(ip: IpAddr) -> bool {
+            match ip {
+                IpAddr::V4(v4) => v4.is_link_local(),
+                IpAddr::V6(_) => false,
+            }
+        }
 
         // Check for private/localhost addresses
         if let Ok(ip) = host.parse::<IpAddr>() {
-            if ip.is_loopback() || is_private_ip(ip) || is_link_local_ip(ip) || ip.is_unspecified() {
+            if ip.is_loopback() || is_private_ip(ip) || is_link_local_ip(ip) || ip.is_unspecified()
+            {
                 return Err(A2aClientError::SsrfBlocked {
                     url: url.to_string(),
                     reason: "Connection to private/localhost addresses is not allowed".to_string(),
@@ -111,12 +114,12 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
 
         let well_known_url = format!("{}/.well-known/agent.json", url.trim_end_matches('/'));
 
-        let response = self
-            .http
-            .get(&well_known_url)
-            .send()
-            .await
-            .map_err(|e| A2aClientError::RequestFailed { url: well_known_url.clone(), source: e })?;
+        let response = self.http.get(&well_known_url).send().await.map_err(|e| {
+            A2aClientError::RequestFailed {
+                url: well_known_url.clone(),
+                source: e,
+            }
+        })?;
 
         if !response.status().is_success() {
             return Err(A2aClientError::AgentNotFound {
@@ -125,13 +128,14 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
             });
         }
 
-        let agent_card: AgentCard = response
-            .json()
-            .await
-            .map_err(|e| A2aClientError::InvalidResponse {
-                url: well_known_url,
-                message: format!("Failed to parse agent card: {}", e),
-            })?;
+        let agent_card: AgentCard =
+            response
+                .json()
+                .await
+                .map_err(|e| A2aClientError::InvalidResponse {
+                    url: well_known_url,
+                    message: format!("Failed to parse agent card: {}", e),
+                })?;
 
         Ok(agent_card)
     }
@@ -152,7 +156,10 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
             .json(&request)
             .send()
             .await
-            .map_err(|e| A2aClientError::RequestFailed { url: task_url.clone(), source: e })?;
+            .map_err(|e| A2aClientError::RequestFailed {
+                url: task_url.clone(),
+                source: e,
+            })?;
 
         if !response.status().is_success() {
             let status = response.status();
@@ -167,13 +174,14 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
             });
         }
 
-        let task_response: SendTaskResponse = response
-            .json()
-            .await
-            .map_err(|e| A2aClientError::InvalidResponse {
-                url: task_url,
-                message: format!("Failed to parse response: {}", e),
-            })?;
+        let task_response: SendTaskResponse =
+            response
+                .json()
+                .await
+                .map_err(|e| A2aClientError::InvalidResponse {
+                    url: task_url,
+                    message: format!("Failed to parse response: {}", e),
+                })?;
 
         Ok(task_response)
     }
@@ -188,12 +196,15 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
     ) -> Result<A2aTask, A2aClientError> {
         let task_url = format!("{}/a2a/tasks/{}", agent_url.trim_end_matches('/'), task_id);
 
-        let response = self
-            .http
-            .get(&task_url)
-            .send()
-            .await
-            .map_err(|e| A2aClientError::RequestFailed { url: task_url.clone(), source: e })?;
+        let response =
+            self.http
+                .get(&task_url)
+                .send()
+                .await
+                .map_err(|e| A2aClientError::RequestFailed {
+                    url: task_url.clone(),
+                    source: e,
+                })?;
 
         if response.status().as_u16() == 404 {
             return Err(A2aClientError::TaskNotFound {
@@ -230,7 +241,11 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
         task_id: &TaskId,
         reason: Option<String>,
     ) -> Result<CancelTaskResponse, A2aClientError> {
-        let cancel_url = format!("{}/a2a/tasks/{}/cancel", agent_url.trim_end_matches('/'), task_id);
+        let cancel_url = format!(
+            "{}/a2a/tasks/{}/cancel",
+            agent_url.trim_end_matches('/'),
+            task_id
+        );
 
         let request = CancelTaskRequest { reason };
 
@@ -240,7 +255,10 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
             .json(&request)
             .send()
             .await
-            .map_err(|e| A2aClientError::RequestFailed { url: cancel_url.clone(), source: e })?;
+            .map_err(|e| A2aClientError::RequestFailed {
+                url: cancel_url.clone(),
+                source: e,
+            })?;
 
         if !response.status().is_success() {
             let status = response.status();
@@ -256,13 +274,14 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
             });
         }
 
-        let cancel_response: CancelTaskResponse = response
-            .json()
-            .await
-            .map_err(|e| A2aClientError::InvalidResponse {
-                url: cancel_url,
-                message: format!("Failed to parse response: {}", e),
-            })?;
+        let cancel_response: CancelTaskResponse =
+            response
+                .json()
+                .await
+                .map_err(|e| A2aClientError::InvalidResponse {
+                    url: cancel_url,
+                    message: format!("Failed to parse response: {}", e),
+                })?;
 
         Ok(cancel_response)
     }
@@ -273,12 +292,15 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
     pub async fn list_agents(&self, agent_url: &str) -> Result<ListAgentsResponse, A2aClientError> {
         let list_url = format!("{}/a2a/agents", agent_url.trim_end_matches('/'));
 
-        let response = self
-            .http
-            .get(&list_url)
-            .send()
-            .await
-            .map_err(|e| A2aClientError::RequestFailed { url: list_url.clone(), source: e })?;
+        let response =
+            self.http
+                .get(&list_url)
+                .send()
+                .await
+                .map_err(|e| A2aClientError::RequestFailed {
+                    url: list_url.clone(),
+                    source: e,
+                })?;
 
         if !response.status().is_success() {
             return Err(A2aClientError::AgentListFailed {
@@ -287,13 +309,14 @@ fn is_link_local_ip(ip: IpAddr) -> bool {
             });
         }
 
-        let list_response: ListAgentsResponse = response
-            .json()
-            .await
-            .map_err(|e| A2aClientError::InvalidResponse {
-                url: list_url,
-                message: format!("Failed to parse agent list: {}", e),
-            })?;
+        let list_response: ListAgentsResponse =
+            response
+                .json()
+                .await
+                .map_err(|e| A2aClientError::InvalidResponse {
+                    url: list_url,
+                    message: format!("Failed to parse agent list: {}", e),
+                })?;
 
         Ok(list_response)
     }
@@ -356,16 +379,29 @@ pub enum A2aClientError {
     InvalidResponse { url: String, message: String },
 
     #[error("Failed to send task to {url} (HTTP {status}): {message}")]
-    TaskSendFailed { url: String, status: u16, message: String },
+    TaskSendFailed {
+        url: String,
+        status: u16,
+        message: String,
+    },
 
     #[error("Task '{task_id}' not found at {url}")]
     TaskNotFound { task_id: TaskId, url: String },
 
     #[error("Failed to query task '{task_id}' at {url} (HTTP {status})")]
-    TaskQueryFailed { task_id: TaskId, url: String, status: u16 },
+    TaskQueryFailed {
+        task_id: TaskId,
+        url: String,
+        status: u16,
+    },
 
     #[error("Failed to cancel task '{task_id}' at {url} (HTTP {status}): {message}")]
-    TaskCancelFailed { task_id: TaskId, url: String, status: u16, message: String },
+    TaskCancelFailed {
+        task_id: TaskId,
+        url: String,
+        status: u16,
+        message: String,
+    },
 
     #[error("Polling timeout for task '{task_id}' after {max_polls} attempts")]
     PollingTimeout { task_id: TaskId, max_polls: u32 },
@@ -396,19 +432,15 @@ pub async fn discover_external_agents(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wiremock::{Mock, MockServer, ResponseTemplate};
     use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[tokio::test]
     async fn test_discover_agent() {
         let mock_server = MockServer::start().await;
 
-        let agent_card = AgentCard::new(
-            "Test Agent",
-            "test-123",
-            "A test agent",
-            &mock_server.uri(),
-        );
+        let agent_card =
+            AgentCard::new("Test Agent", "test-123", "A test agent", &mock_server.uri());
 
         Mock::given(method("GET"))
             .and(path("/.well-known/agent.json"))
@@ -438,7 +470,10 @@ mod tests {
         let result = client.discover_agent(&mock_server.uri()).await;
 
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), A2aClientError::AgentNotFound { .. }));
+        assert!(matches!(
+            result.unwrap_err(),
+            A2aClientError::AgentNotFound { .. }
+        ));
     }
 
     #[tokio::test]

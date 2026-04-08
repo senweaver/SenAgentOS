@@ -36,8 +36,8 @@ pub mod settings_sync;
 pub mod team_memory_sync;
 pub mod tool_use_summary;
 
-pub use analytics::AnalyticsService;
 pub use agent_summary::AgentSummaryService;
+pub use analytics::AnalyticsService;
 pub use auto_dream::AutoDreamService;
 pub use compact::CompactService;
 pub use lsp::LspService;
@@ -56,4 +56,4 @@ pub use tool_use_summary::ToolUseSummaryService;
 
 // -- Service container (wires all services for agent runtime) --
 pub mod container;
-pub use container::{ServiceContainer, ServiceContainerConfig, init_services, get_services};
+pub use container::{ServiceContainer, ServiceContainerConfig, get_services, init_services};

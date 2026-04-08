@@ -56,11 +56,7 @@ impl RuntimeHooks {
 
     /// Check if a tool call is allowed by guardrails.
     /// Returns Ok(()) if allowed, Err with reason if denied.
-    pub fn check_guardrails(
-        &self,
-        tool_name: &str,
-        context: Option<&str>,
-    ) -> Result<(), String> {
+    pub fn check_guardrails(&self, tool_name: &str, context: Option<&str>) -> Result<(), String> {
         match &self.guardrails {
             Some(engine) => {
                 let verdict = engine.check(tool_name, context);
@@ -150,12 +146,7 @@ impl LearningHooks {
     }
 
     /// Record tool execution for skill evolution tracking.
-    pub fn record_tool_execution(
-        &self,
-        tool_name: &str,
-        success: bool,
-        duration_ms: u64,
-    ) {
+    pub fn record_tool_execution(&self, tool_name: &str, success: bool, duration_ms: u64) {
         if !self.skill_evolution_enabled {
             return;
         }
@@ -210,7 +201,11 @@ pub fn publish_memory_event(operation: &str, key: Option<&str>) {
 pub fn track_delegate_spawn(agent_name: &str, provider: &str, model: &str) {
     if let Some(rt) = crate::agent::multi_agent_runtime::global_runtime() {
         use crate::agent::registry::{AgentCapability, AgentInfo};
-        let id = format!("delegate-{}-{}", agent_name, uuid::Uuid::new_v4().as_simple());
+        let id = format!(
+            "delegate-{}-{}",
+            agent_name,
+            uuid::Uuid::new_v4().as_simple()
+        );
         let mut info = AgentInfo::new(&id, agent_name, "delegate");
         info.capabilities.push(AgentCapability {
             name: "delegate".to_string(),
@@ -218,7 +213,8 @@ pub fn track_delegate_spawn(agent_name: &str, provider: &str, model: &str) {
             proficiency: 1.0,
         });
         let _ = rt.registry.register(info);
-        rt.registry.set_state(&id, crate::agent::registry::AgentState::Active);
+        rt.registry
+            .set_state(&id, crate::agent::registry::AgentState::Active);
         tracing::debug!(agent_name, delegate_id = %id, "Tracked delegate sub-agent spawn");
     }
 }
@@ -231,7 +227,8 @@ pub fn track_delegate_complete(agent_name: &str, success: bool) {
         for agent in agents {
             if agent.name == agent_name && agent.role == "delegate" {
                 rt.registry.complete_task(&agent.id, success);
-                rt.registry.set_state(&agent.id, crate::agent::registry::AgentState::Terminated);
+                rt.registry
+                    .set_state(&agent.id, crate::agent::registry::AgentState::Terminated);
                 break;
             }
         }

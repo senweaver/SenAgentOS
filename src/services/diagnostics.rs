@@ -109,11 +109,7 @@ impl DiagnosticsTracker {
             .events
             .iter()
             .rev()
-            .filter(|e| {
-                min_level.map_or(true, |ml| {
-                    level_ord(e.level) >= level_ord(ml)
-                })
-            })
+            .filter(|e| min_level.map_or(true, |ml| level_ord(e.level) >= level_ord(ml)))
             .take(limit)
             .cloned()
             .collect()

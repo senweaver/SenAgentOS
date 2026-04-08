@@ -106,9 +106,7 @@ pub enum AgentAuth {
         scopes: Vec<String>,
     },
     /// API key authentication.
-    ApiKey {
-        location: String,
-    },
+    ApiKey { location: String },
 }
 
 /// A2A Task status.
@@ -165,7 +163,11 @@ impl A2aTask {
     pub fn new(name: impl Into<String>, description: impl Into<String>) -> Self {
         let now = Utc::now();
         Self {
-            id: format!("task-{}-{}", now.timestamp_millis(), uuid::Uuid::new_v4().to_string()[..8].to_string()),
+            id: format!(
+                "task-{}-{}",
+                now.timestamp_millis(),
+                uuid::Uuid::new_v4().to_string()[..8].to_string()
+            ),
             name: name.into(),
             description: description.into(),
             status: TaskStatus::Submitted,
@@ -310,18 +312,12 @@ impl A2aError {
 
     /// Task not found error.
     pub fn task_not_found(task_id: &str) -> Self {
-        Self::new(
-            "TASK_NOT_FOUND",
-            format!("Task '{}' not found", task_id),
-        )
+        Self::new("TASK_NOT_FOUND", format!("Task '{}' not found", task_id))
     }
 
     /// Agent not found error.
     pub fn agent_not_found(agent_id: &str) -> Self {
-        Self::new(
-            "AGENT_NOT_FOUND",
-            format!("Agent '{}' not found", agent_id),
-        )
+        Self::new("AGENT_NOT_FOUND", format!("Agent '{}' not found", agent_id))
     }
 
     /// Invalid request error.
@@ -379,10 +375,7 @@ impl A2aTaskStore {
 
     /// List tasks by status.
     pub fn list_by_status(&self, status: TaskStatus) -> Vec<&A2aTask> {
-        self.tasks
-            .values()
-            .filter(|t| t.status == status)
-            .collect()
+        self.tasks.values().filter(|t| t.status == status).collect()
     }
 
     /// Count of tasks in the store.
@@ -393,8 +386,9 @@ impl A2aTaskStore {
     /// Clean up old completed tasks (older than max_age).
     pub fn cleanup_old(&mut self, max_age: chrono::Duration) {
         let cutoff = Utc::now() - max_age;
-        self.tasks
-            .retain(|_, task| !task.is_terminal() || task.completed_at.map_or(true, |t| t > cutoff));
+        self.tasks.retain(|_, task| {
+            !task.is_terminal() || task.completed_at.map_or(true, |t| t > cutoff)
+        });
     }
 }
 
@@ -404,7 +398,12 @@ mod tests {
 
     #[test]
     fn test_agent_card_creation() {
-        let card = AgentCard::new("Test Agent", "agent-123", "A test agent", "http://localhost:8080");
+        let card = AgentCard::new(
+            "Test Agent",
+            "agent-123",
+            "A test agent",
+            "http://localhost:8080",
+        );
         assert_eq!(card.name, "Test Agent");
         assert_eq!(card.id, "agent-123");
     }
@@ -418,7 +417,9 @@ mod tests {
         assert_eq!(task.status, TaskStatus::Working);
         assert!(!task.is_terminal());
 
-        task.mark_completed(TaskResult::Text { text: "Done".to_string() });
+        task.mark_completed(TaskResult::Text {
+            text: "Done".to_string(),
+        });
         assert_eq!(task.status, TaskStatus::Completed);
         assert!(task.is_terminal());
         assert!(task.result.is_some());
@@ -444,7 +445,9 @@ mod tests {
 
         // Add completed task with old completion time
         let mut old_task = A2aTask::new("Old", "Old task");
-        old_task.mark_completed(TaskResult::Text { text: "Done".to_string() });
+        old_task.mark_completed(TaskResult::Text {
+            text: "Done".to_string(),
+        });
         // Simulate old task by manipulating timestamp
         old_task.completed_at = Some(Utc::now() - chrono::Duration::hours(25));
         store.store(old_task);
@@ -471,8 +474,12 @@ mod tests {
 
     #[test]
     fn test_task_result_types() {
-        let text = TaskResult::Text { text: "Hello".to_string() };
-        let data = TaskResult::Data { data: serde_json::json!({"key": "value"}) };
+        let text = TaskResult::Text {
+            text: "Hello".to_string(),
+        };
+        let data = TaskResult::Data {
+            data: serde_json::json!({"key": "value"}),
+        };
 
         assert!(matches!(text, TaskResult::Text { .. }));
         assert!(matches!(data, TaskResult::Data { .. }));

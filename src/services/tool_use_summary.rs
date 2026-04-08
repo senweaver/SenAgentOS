@@ -54,15 +54,17 @@ impl ToolUseSummaryService {
     pub fn aggregate(&self) -> Vec<ToolUsageStats> {
         let mut map: HashMap<String, ToolUsageStats> = HashMap::new();
         for inv in &self.invocations {
-            let entry = map.entry(inv.tool_name.clone()).or_insert_with(|| ToolUsageStats {
-                tool_name: inv.tool_name.clone(),
-                call_count: 0,
-                total_duration_ms: 0,
-                success_count: 0,
-                failure_count: 0,
-                total_input_tokens: 0,
-                total_output_tokens: 0,
-            });
+            let entry = map
+                .entry(inv.tool_name.clone())
+                .or_insert_with(|| ToolUsageStats {
+                    tool_name: inv.tool_name.clone(),
+                    call_count: 0,
+                    total_duration_ms: 0,
+                    success_count: 0,
+                    failure_count: 0,
+                    total_input_tokens: 0,
+                    total_output_tokens: 0,
+                });
             entry.call_count += 1;
             entry.total_duration_ms += inv.duration_ms;
             if inv.success {
@@ -80,21 +82,28 @@ impl ToolUseSummaryService {
 
     /// Get stats for a specific turn.
     pub fn turn_stats(&self, turn: u32) -> Vec<ToolUsageStats> {
-        let filtered: Vec<&ToolInvocation> = self.invocations.iter().filter(|i| i.turn == turn).collect();
+        let filtered: Vec<&ToolInvocation> =
+            self.invocations.iter().filter(|i| i.turn == turn).collect();
         let mut map: HashMap<String, ToolUsageStats> = HashMap::new();
         for inv in filtered {
-            let entry = map.entry(inv.tool_name.clone()).or_insert_with(|| ToolUsageStats {
-                tool_name: inv.tool_name.clone(),
-                call_count: 0,
-                total_duration_ms: 0,
-                success_count: 0,
-                failure_count: 0,
-                total_input_tokens: 0,
-                total_output_tokens: 0,
-            });
+            let entry = map
+                .entry(inv.tool_name.clone())
+                .or_insert_with(|| ToolUsageStats {
+                    tool_name: inv.tool_name.clone(),
+                    call_count: 0,
+                    total_duration_ms: 0,
+                    success_count: 0,
+                    failure_count: 0,
+                    total_input_tokens: 0,
+                    total_output_tokens: 0,
+                });
             entry.call_count += 1;
             entry.total_duration_ms += inv.duration_ms;
-            if inv.success { entry.success_count += 1; } else { entry.failure_count += 1; }
+            if inv.success {
+                entry.success_count += 1;
+            } else {
+                entry.failure_count += 1;
+            }
             entry.total_input_tokens += inv.input_tokens;
             entry.total_output_tokens += inv.output_tokens;
         }
@@ -112,8 +121,11 @@ impl ToolUseSummaryService {
             .map(|s| {
                 format!(
                     "{}: {} calls, {}ms total, {}/{} success/fail",
-                    s.tool_name, s.call_count, s.total_duration_ms,
-                    s.success_count, s.failure_count
+                    s.tool_name,
+                    s.call_count,
+                    s.total_duration_ms,
+                    s.success_count,
+                    s.failure_count
                 )
             })
             .collect();

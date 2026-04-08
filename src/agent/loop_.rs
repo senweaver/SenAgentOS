@@ -2,14 +2,14 @@
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
 use crate::approval::{ApprovalManager, ApprovalRequest, ApprovalResponse};
-use crate::config::schema::ModelPricing;
 use crate::config::Config;
-use crate::cost::types::{BudgetCheck, TokenUsage as CostTokenUsage};
+use crate::config::schema::ModelPricing;
 use crate::cost::CostTracker;
+use crate::cost::types::{BudgetCheck, TokenUsage as CostTokenUsage};
 use crate::i18n::ToolDescriptions;
-use crate::memory::{self, decay, Memory, MemoryCategory};
+use crate::memory::{self, Memory, MemoryCategory, decay};
 use crate::multimodal;
-use crate::observability::{self, runtime_trace, Observer, ObserverEvent};
+use crate::observability::{self, Observer, ObserverEvent, runtime_trace};
 use crate::providers::traits::StreamEvent;
 use crate::providers::{
     self, ChatMessage, ChatRequest, Provider, ProviderCapabilityError, ToolCall,
@@ -915,11 +915,7 @@ fn parse_xml_tool_calls(xml_content: &str) -> Option<Vec<ParsedToolCall>> {
         });
     }
 
-    if calls.is_empty() {
-        None
-    } else {
-        Some(calls)
-    }
+    if calls.is_empty() { None } else { Some(calls) }
 }
 
 /// Parse MiniMax-style XML tool calls with attributed invoke/parameter tags.
@@ -2624,8 +2620,11 @@ async fn execute_one_tool(
 
     let static_tool = find_tool(tools_registry, call_name);
     let activated_arc = if static_tool.is_none() {
-        activated_tools
-            .and_then(|at| at.lock().unwrap_or_else(|e| e.into_inner()).get_resolved(call_name))
+        activated_tools.and_then(|at| {
+            at.lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .get_resolved(call_name)
+        })
     } else {
         None
     };
@@ -3040,7 +3039,9 @@ pub(crate) async fn run_tool_call_loop(
         {
             return Err(anyhow::anyhow!(
                 "Budget exceeded: ${:.4} of ${:.2} {:?} limit. Cannot make further API calls until the budget resets.",
-                current_usd, limit_usd, period
+                current_usd,
+                limit_usd,
+                period
             ));
         }
 
@@ -4541,7 +4542,9 @@ pub async fn run(
                     println!("  /help             Show this help message");
                     println!("  /clear /new       Clear conversation history");
                     println!("  /quit /exit       Exit interactive mode");
-                    println!("  /think:<level>    Set reasoning depth (off|minimal|low|medium|high|max)\n");
+                    println!(
+                        "  /think:<level>    Set reasoning depth (off|minimal|low|medium|high|max)\n"
+                    );
                     continue;
                 }
                 "/clear" | "/new" => {
@@ -5214,8 +5217,8 @@ pub async fn process_message(
 #[cfg(test)]
 mod tests {
     use super::{
-        apply_compaction_summary, build_compaction_transcript, load_interactive_session_history,
-        save_interactive_session_history, InteractiveSessionState,
+        InteractiveSessionState, apply_compaction_summary, build_compaction_transcript,
+        load_interactive_session_history, save_interactive_session_history,
     };
     use crate::providers::ChatMessage;
     use tempfile::tempdir;
@@ -5259,7 +5262,7 @@ mod tests {
 
     use super::*;
     use async_trait::async_trait;
-    use base64::{engine::general_purpose::STANDARD, Engine as _};
+    use base64::{Engine as _, engine::general_purpose::STANDARD};
     use std::collections::VecDeque;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::{Arc, Mutex};
@@ -5347,9 +5350,9 @@ mod tests {
 
     use crate::memory::{Memory, MemoryCategory, SqliteMemory};
     use crate::observability::NoopObserver;
+    use crate::providers::ChatResponse;
     use crate::providers::router::{Route, RouterProvider};
     use crate::providers::traits::{ProviderCapabilities, StreamChunk, StreamEvent, StreamOptions};
-    use crate::providers::ChatResponse;
     use tempfile::TempDir;
 
     struct NonVisionProvider {
@@ -6037,9 +6040,10 @@ mod tests {
         .await
         .expect_err("oversized payload must fail");
 
-        assert!(err
-            .to_string()
-            .contains("multimodal image size limit exceeded"));
+        assert!(
+            err.to_string()
+                .contains("multimodal image size limit exceeded")
+        );
         assert_eq!(calls.load(Ordering::SeqCst), 0);
     }
 
@@ -8151,7 +8155,7 @@ Tail"#;
         assert_eq!(history[0].content, "system prompt");
         // Trimmed to limit
         assert_eq!(history.len(), DEFAULT_MAX_HISTORY_MESSAGES + 1); // +1 for system
-                                                                     // Most recent messages preserved
+        // Most recent messages preserved
         let last = &history[history.len() - 1];
         assert_eq!(
             last.content,
@@ -8651,10 +8655,12 @@ Final answer."#;
         assert_eq!(calls.len(), 1);
         assert_eq!(calls[0].0, "shell");
         assert!(calls[0].1["command"].as_str().unwrap().contains("curl"));
-        assert!(calls[0].1["command"]
-            .as_str()
-            .unwrap()
-            .contains("example.com"));
+        assert!(
+            calls[0].1["command"]
+                .as_str()
+                .unwrap()
+                .contains("example.com")
+        );
     }
 
     #[test]
@@ -9515,7 +9521,7 @@ Let me check the result."#;
     #[tokio::test]
     async fn cost_tracking_records_usage_when_scoped() {
         use super::{
-            run_tool_call_loop, ToolLoopCostTrackingContext, TOOL_LOOP_COST_TRACKING_CONTEXT,
+            TOOL_LOOP_COST_TRACKING_CONTEXT, ToolLoopCostTrackingContext, run_tool_call_loop,
         };
         use crate::config::schema::ModelPricing;
         use crate::cost::CostTracker;
@@ -9597,7 +9603,7 @@ Let me check the result."#;
     #[tokio::test]
     async fn cost_tracking_enforces_budget() {
         use super::{
-            run_tool_call_loop, ToolLoopCostTrackingContext, TOOL_LOOP_COST_TRACKING_CONTEXT,
+            TOOL_LOOP_COST_TRACKING_CONTEXT, ToolLoopCostTrackingContext, run_tool_call_loop,
         };
         use crate::config::schema::ModelPricing;
         use crate::cost::CostTracker;

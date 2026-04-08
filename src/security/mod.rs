@@ -79,19 +79,21 @@ pub use iam_policy::{IamPolicy, PolicyDecision};
 pub use nevis::{NevisAuthProvider, NevisIdentity};
 // Prompt injection defense exports
 #[allow(unused_imports)]
+pub use capabilities::{Capability, CapabilityCheck, CapabilityError, CapabilityManager};
+#[allow(unused_imports)]
 pub use leak_detector::{LeakDetector, LeakResult};
+#[allow(unused_imports)]
+pub use manifest_signing::{ManifestSignError, ManifestSigner, SignedManifest};
 #[allow(unused_imports)]
 pub use prompt_guard::{GuardAction, GuardResult, PromptGuard};
 #[allow(unused_imports)]
-pub use workspace_boundary::{BoundaryVerdict, WorkspaceBoundary};
-#[allow(unused_imports)]
-pub use manifest_signing::{ManifestSigner, SignedManifest, ManifestSignError};
-#[allow(unused_imports)]
-pub use capabilities::{Capability, CapabilityCheck, CapabilityError, CapabilityManager};
+pub use rbac::{
+    AccessContext, AuthSource, AuthorizationResult, CallerIdentity, RbacConfig, RbacEngine,
+};
 #[allow(unused_imports)]
 pub use taint::{TaintLabel, TaintSink, TaintViolation, TaintedValue};
 #[allow(unused_imports)]
-pub use rbac::{AccessContext, AuthSource, AuthorizationResult, CallerIdentity, RbacConfig, RbacEngine};
+pub use workspace_boundary::{BoundaryVerdict, WorkspaceBoundary};
 
 /// Redact sensitive values for safe logging. Shows first 4 characters + "***" suffix.
 /// Uses char-boundary-safe indexing to avoid panics on multi-byte UTF-8 strings.

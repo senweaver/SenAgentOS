@@ -74,9 +74,7 @@ impl BridgeApi {
     }
 
     /// Session status endpoint handler.
-    pub async fn handle_session_status(
-        _session_id: &str,
-    ) -> anyhow::Result<SessionStatusResponse> {
+    pub async fn handle_session_status(_session_id: &str) -> anyhow::Result<SessionStatusResponse> {
         anyhow::bail!("Bridge API not yet wired to gateway")
     }
 

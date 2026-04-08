@@ -7,12 +7,12 @@
 //! from all feedback sources and produces actionable policy adjustments
 //! for the agent runtime.
 
+use chrono::{DateTime, Utc};
+use parking_lot::RwLock;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use parking_lot::RwLock;
-use chrono::{DateTime, Utc};
 
 /// Configuration for the reinforcement engine.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -43,11 +43,21 @@ pub struct ReinforcementConfig {
     pub base_temperature: f64,
 }
 
-fn default_learning_rate() -> f64 { 0.1 }
-fn default_discount_factor() -> f64 { 0.95 }
-fn default_window_size() -> usize { 20 }
-fn default_warmup_turns() -> usize { 10 }
-fn default_base_temperature() -> f64 { 0.7 }
+fn default_learning_rate() -> f64 {
+    0.1
+}
+fn default_discount_factor() -> f64 {
+    0.95
+}
+fn default_window_size() -> usize {
+    20
+}
+fn default_warmup_turns() -> usize {
+    10
+}
+fn default_base_temperature() -> f64 {
+    0.7
+}
 
 impl Default for ReinforcementConfig {
     fn default() -> Self {
@@ -176,11 +186,7 @@ impl ReinforcementEngine {
             };
         }
 
-        let recent: Vec<&TurnRecord> = history
-            .iter()
-            .rev()
-            .take(self.config.window_size)
-            .collect();
+        let recent: Vec<&TurnRecord> = history.iter().rev().take(self.config.window_size).collect();
 
         let recent_avg = recent.iter().map(|r| r.reward).sum::<f64>() / recent.len() as f64;
         let overall_avg = history.iter().map(|r| r.reward).sum::<f64>() / history.len() as f64;
@@ -220,8 +226,7 @@ impl ReinforcementEngine {
             }
         };
 
-        let confidence = (history.len() as f64 / (self.config.warmup_turns as f64 * 3.0))
-            .min(1.0);
+        let confidence = (history.len() as f64 / (self.config.warmup_turns as f64 * 3.0)).min(1.0);
 
         PolicyAdjustment {
             temperature_delta,
@@ -274,14 +279,11 @@ impl ReinforcementEngine {
                 continue;
             }
 
-            let avg_reward =
-                records.iter().map(|r| r.reward).sum::<f64>() / records.len() as f64;
+            let avg_reward = records.iter().map(|r| r.reward).sum::<f64>() / records.len() as f64;
 
             let mut model_perf: HashMap<String, (f64, u32)> = HashMap::new();
             for r in records {
-                let entry = model_perf
-                    .entry(r.model_used.clone())
-                    .or_insert((0.0, 0));
+                let entry = model_perf.entry(r.model_used.clone()).or_insert((0.0, 0));
                 entry.0 += r.reward;
                 entry.1 += 1;
             }
@@ -298,9 +300,7 @@ impl ReinforcementEngine {
             let mut tool_rewards: HashMap<String, (f64, u32)> = HashMap::new();
             for r in records {
                 for tool in &r.tools_used {
-                    let entry = tool_rewards
-                        .entry(tool.clone())
-                        .or_insert((0.0, 0));
+                    let entry = tool_rewards.entry(tool.clone()).or_insert((0.0, 0));
                     entry.0 += r.reward;
                     entry.1 += 1;
                 }
@@ -310,10 +310,7 @@ impl ReinforcementEngine {
                 .iter()
                 .map(|(t, (s, c))| (t.clone(), s / *c as f64))
                 .collect();
-            tool_pref.sort_by(|a, b| {
-                b.1.partial_cmp(&a.1)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            });
+            tool_pref.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
             let good_tools: Vec<String> = tool_pref
                 .iter()

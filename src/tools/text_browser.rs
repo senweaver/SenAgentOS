@@ -200,7 +200,7 @@ impl Tool for TextBrowserTool {
                     success: false,
                     output: String::new(),
                     error: Some(e.to_string()),
-                })
+                });
             }
         };
 
@@ -213,7 +213,7 @@ impl Tool for TextBrowserTool {
                     success: false,
                     output: String::new(),
                     error: Some(e.to_string()),
-                })
+                });
             }
         };
 
