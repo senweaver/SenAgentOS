@@ -32,10 +32,9 @@ pub fn builtin_output_styles() -> Vec<OutputStyleDef> {
         OutputStyleDef {
             name: STYLE_CONCISE.to_string(),
             description: "Minimal, terse responses".to_string(),
-            system_prompt_addition:
-                "Be extremely concise. Use short sentences and bullet points. \
+            system_prompt_addition: "Be extremely concise. Use short sentences and bullet points. \
                  Omit pleasantries and explanations unless asked."
-                    .to_string(),
+                .to_string(),
         },
         OutputStyleDef {
             name: STYLE_DETAILED.to_string(),
@@ -55,11 +54,10 @@ pub fn builtin_output_styles() -> Vec<OutputStyleDef> {
         OutputStyleDef {
             name: STYLE_CODE_ONLY.to_string(),
             description: "Only output code, minimal prose".to_string(),
-            system_prompt_addition:
-                "Output only code and minimal necessary prose. \
+            system_prompt_addition: "Output only code and minimal necessary prose. \
                  Do not explain unless explicitly asked. \
                  Prefer code blocks over descriptions."
-                    .to_string(),
+                .to_string(),
         },
     ]
 }

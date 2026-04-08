@@ -63,7 +63,10 @@ impl PolicyLimitsService {
                         allowed: rule.enforcement != PolicyEnforcement::Block,
                         violations: vec![PolicyViolation {
                             rule_id: rule.id.clone(),
-                            message: format!("Tool '{tool_name}' is blocked by policy: {}", rule.description),
+                            message: format!(
+                                "Tool '{tool_name}' is blocked by policy: {}",
+                                rule.description
+                            ),
                             enforcement: rule.enforcement,
                         }],
                     };

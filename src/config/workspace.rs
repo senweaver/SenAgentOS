@@ -7,7 +7,7 @@
 //! memory namespace, audit trail, secrets scope, and tool restrictions.
 //! Profiles are stored under `~/.senagent/workspaces/<client_name>/`.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

@@ -449,6 +449,11 @@ pub struct Config {
     #[serde(default)]
     pub suggestions: crate::agent::suggestions::SuggestionsConfig,
 
+    /// Middleware pipeline configuration (`[middleware]`).
+    /// Controls explicit ordering of agent loop hooks. DeerFlow-inspired.
+    #[serde(default)]
+    pub middleware: crate::agent::middleware::MiddlewareConfig,
+
     /// Tool groups configuration for organized tool management (`[tool_groups]`).
     #[serde(default)]
     pub tool_groups: crate::tools::tool_groups::ToolGroupsConfig,
@@ -480,6 +485,10 @@ pub struct Config {
     /// Skill/tool performance evolution tracking (`[skill_evolution]`).
     #[serde(default)]
     pub skill_evolution: crate::agent::skill_evolution::SkillEvolutionConfig,
+
+    /// Clarification engine configuration for pre-execution ambiguity detection (`[clarification]`).
+    #[serde(default)]
+    pub clarification: crate::agent::clarify::ClarificationConfig,
 
     /// Reinforcement learning engine (`[reinforcement]`).
     #[serde(default)]
@@ -1427,6 +1436,24 @@ pub struct AgentConfig {
     /// Context compression configuration for automatic conversation compaction.
     #[serde(default)]
     pub context_compression: crate::agent::context_compressor::ContextCompressionConfig,
+
+    /// Auto mode configuration for AI-powered permission classification.
+    /// When enabled, an LLM-based classifier decides whether tool calls
+    /// should be auto-approved based on user-defined rules.
+    #[serde(default)]
+    pub auto_mode: AutoModeConfig,
+}
+
+/// Auto mode enablement and configuration.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, JsonSchema)]
+pub struct AutoModeConfig {
+    /// Enable auto mode for permission classification. Default: `false`.
+    #[serde(default)]
+    pub enabled: bool,
+
+    /// Custom rules. When empty, default rules are used.
+    #[serde(default)]
+    pub rules: AutoModeRules,
 }
 
 fn default_agent_max_tool_iterations() -> usize {
@@ -1468,6 +1495,7 @@ impl Default for AgentConfig {
             auto_classify: None,
             context_compression:
                 crate::agent::context_compressor::ContextCompressionConfig::default(),
+            auto_mode: AutoModeConfig::default(),
         }
     }
 }
@@ -5726,6 +5754,28 @@ pub struct ClassificationRule {
     pub priority: i32,
 }
 
+// ── Auto Mode ──────────────────────────────────────────────────────
+
+/// Auto Mode rules for AI-powered permission classification.
+/// Mirrors `AutoModeRules` from cc-typescript-src.
+///
+/// Auto mode uses an LLM-based classifier to decide whether tool calls
+/// should be auto-approved or require user confirmation.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, JsonSchema)]
+pub struct AutoModeRules {
+    /// Rules for operations that should be auto-approved.
+    #[serde(default)]
+    pub allow: Vec<String>,
+
+    /// Rules for operations that should require confirmation (soft deny).
+    #[serde(default)]
+    pub soft_deny: Vec<String>,
+
+    /// Environment context descriptions that help the classifier make decisions.
+    #[serde(default)]
+    pub environment: Vec<String>,
+}
+
 // ── Heartbeat ────────────────────────────────────────────────────
 
 /// Heartbeat configuration for periodic health pings (`[heartbeat]` section).
@@ -8331,6 +8381,7 @@ impl Default for Config {
             plan_mode: crate::agent::plan_mode::PlanModeConfig::default(),
             auto_title: crate::agent::auto_title::AutoTitleConfig::default(),
             suggestions: crate::agent::suggestions::SuggestionsConfig::default(),
+            middleware: crate::agent::middleware::MiddlewareConfig::default(),
             tool_groups: crate::tools::tool_groups::ToolGroupsConfig::default(),
             user_profile: crate::agent::user_profile::UserProfileConfig::default(),
             self_eval: crate::agent::self_eval::SelfEvalConfig::default(),
@@ -8339,9 +8390,11 @@ impl Default for Config {
             self_reflection: crate::agent::self_reflection::SelfReflectionConfig::default(),
             prompt_optimizer: crate::agent::prompt_optimizer::PromptOptimizerConfig::default(),
             skill_evolution: crate::agent::skill_evolution::SkillEvolutionConfig::default(),
+            clarification: crate::agent::clarify::ClarificationConfig::default(),
             reinforcement: crate::agent::reinforcement::ReinforcementConfig::default(),
             rbac: crate::security::rbac::RbacConfig::default(),
-            tool_output_compressor: crate::agent::tool_output_compressor::ToolOutputCompressorConfig::default(),
+            tool_output_compressor:
+                crate::agent::tool_output_compressor::ToolOutputCompressorConfig::default(),
             token_budget: crate::agent::token_budget::TokenBudgetConfig::default(),
         }
     }
@@ -9503,9 +9556,9 @@ impl Config {
             &self.security.otp.gated_domains,
             &self.security.otp.gated_domain_categories,
         )
-        .with_context(|| {
-            "Invalid security.otp.gated_domains or security.otp.gated_domain_categories"
-        })?;
+        .with_context(
+            || "Invalid security.otp.gated_domains or security.otp.gated_domain_categories",
+        )?;
         if self.security.estop.state_file.trim().is_empty() {
             anyhow::bail!("security.estop.state_file must not be empty");
         }
@@ -9666,9 +9719,7 @@ impl Config {
                     );
                 }
                 other => {
-                    anyhow::bail!(
-                        "runtime.kind must be one of: native, docker (got '{other}')"
-                    );
+                    anyhow::bail!("runtime.kind must be one of: native, docker (got '{other}')");
                 }
             }
         }
@@ -9676,7 +9727,14 @@ impl Config {
         // Observability
         {
             let known = [
-                "none", "noop", "log", "verbose", "prometheus", "otel", "opentelemetry", "otlp",
+                "none",
+                "noop",
+                "log",
+                "verbose",
+                "prometheus",
+                "otel",
+                "opentelemetry",
+                "otlp",
             ];
             for token in self.observability.backend.split(',').map(str::trim) {
                 if token.is_empty() {
@@ -9685,7 +9743,8 @@ impl Config {
                 if !known.contains(&token) {
                     anyhow::bail!(
                         "observability.backend contains unknown backend '{token}'; \
-                         known backends: {}", known.join(", ")
+                         known backends: {}",
+                        known.join(", ")
                     );
                 }
             }
@@ -9703,7 +9762,12 @@ impl Config {
                         "peripherals.boards[{i}].transport must be one of: serial, native, websocket (got '{transport}')"
                     );
                 }
-                if transport == "serial" && board_cfg.path.as_deref().map_or(true, |p| p.trim().is_empty()) {
+                if transport == "serial"
+                    && board_cfg
+                        .path
+                        .as_deref()
+                        .map_or(true, |p| p.trim().is_empty())
+                {
                     anyhow::bail!(
                         "peripherals.boards[{i}].path must not be empty when transport is 'serial'"
                     );
@@ -10145,7 +10209,7 @@ impl Config {
         // Skills script-file audit override: SAGENT_SKILLS_ALLOW_SCRIPTS
         if let Ok(flag) = std::env::var("SAGENT_SKILLS_ALLOW_SCRIPTS") {
             if !flag.trim().is_empty() {
-                match flag.trim().to_ascii_lowercase().as_str(){
+                match flag.trim().to_ascii_lowercase().as_str() {
                     "1" | "true" | "yes" | "on" => self.skills.allow_scripts = true,
                     "0" | "false" | "no" | "off" => self.skills.allow_scripts = false,
                     _ => tracing::warn!(
@@ -10178,8 +10242,7 @@ impl Config {
         }
 
         // Gateway host: SAGENT_GATEWAY_HOST or HOST
-        if let Ok(host) = std::env::var("SAGENT_GATEWAY_HOST").or_else(|_| std::env::var("HOST"))
-        {
+        if let Ok(host) = std::env::var("SAGENT_GATEWAY_HOST").or_else(|_| std::env::var("HOST")) {
             if !host.is_empty() {
                 self.gateway.host = host;
             }
@@ -10210,9 +10273,7 @@ impl Config {
                     );
                 }
                 Err(_) => {
-                    tracing::warn!(
-                        "Ignoring SAGENT_TEMPERATURE={temp_str:?}: not a valid number"
-                    );
+                    tracing::warn!("Ignoring SAGENT_TEMPERATURE={temp_str:?}: not a valid number");
                 }
             }
         }
@@ -10887,20 +10948,9 @@ async fn sync_directory(path: &Path) -> Result<()> {
 
     #[cfg(windows)]
     {
-        use std::os::windows::fs::OpenOptionsExt;
-        const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x02000000;
-        let dir = std::fs::OpenOptions::new()
-            .read(true)
-            .custom_flags(FILE_FLAG_BACKUP_SEMANTICS)
-            .open(path)
-            .with_context(|| format!("Failed to open directory for fsync: {}", path.display()))?;
-        dir.sync_all()
-            .with_context(|| format!("Failed to fsync directory metadata: {}", path.display()))?;
-        Ok(())
-    }
-
-    #[cfg(not(any(unix, windows)))]
-    {
+        // Directory fsync is not reliable on Windows (requires special privileges
+        // that are often unavailable when invoked via gateway API).  The atomic rename
+        // below already provides the required durability guarantee.
         let _ = path;
         Ok(())
     }
@@ -10982,8 +11032,8 @@ mod tests {
     use tempfile::TempDir;
     use tokio::sync::{Mutex, MutexGuard};
     use tokio::test;
-    use tokio_stream::wrappers::ReadDirStream;
     use tokio_stream::StreamExt;
+    use tokio_stream::wrappers::ReadDirStream;
 
     // ── Tilde expansion ───────────────────────────────────────
 
@@ -11542,6 +11592,7 @@ auto_save = true
             plan_mode: Default::default(),
             auto_title: Default::default(),
             suggestions: Default::default(),
+            middleware: Default::default(),
             tool_groups: Default::default(),
             user_profile: Default::default(),
             self_eval: Default::default(),
@@ -11550,6 +11601,7 @@ auto_save = true
             self_reflection: Default::default(),
             prompt_optimizer: Default::default(),
             skill_evolution: Default::default(),
+            clarification: Default::default(),
             reinforcement: Default::default(),
             rbac: Default::default(),
             tool_output_compressor: Default::default(),
@@ -11767,8 +11819,7 @@ provider_timeout_secs = 300
 
     #[test]
     async fn parse_extra_headers_env_with_url_value() {
-        let headers =
-            parse_extra_headers_env("HTTP-Referer:https://github.com/senweaver/senagent");
+        let headers = parse_extra_headers_env("HTTP-Referer:https://github.com/senweaver/senagent");
         assert_eq!(headers.len(), 1);
         // Only splits on first colon, preserving URL colons in value
         assert_eq!(headers[0].0, "HTTP-Referer");
@@ -12088,6 +12139,7 @@ default_temperature = 0.7
             plan_mode: Default::default(),
             auto_title: Default::default(),
             suggestions: Default::default(),
+            middleware: Default::default(),
             tool_groups: Default::default(),
             user_profile: Default::default(),
             self_eval: Default::default(),
@@ -12096,6 +12148,7 @@ default_temperature = 0.7
             self_reflection: Default::default(),
             prompt_optimizer: Default::default(),
             skill_evolution: Default::default(),
+            clarification: Default::default(),
             reinforcement: Default::default(),
             rbac: Default::default(),
             tool_output_compressor: Default::default(),
@@ -12107,10 +12160,12 @@ default_temperature = 0.7
 
         let contents = tokio::fs::read_to_string(&config_path).await.unwrap();
         let loaded: Config = toml::from_str(&contents).unwrap();
-        assert!(loaded
-            .api_key
-            .as_deref()
-            .is_some_and(crate::security::SecretStore::is_encrypted));
+        assert!(
+            loaded
+                .api_key
+                .as_deref()
+                .is_some_and(crate::security::SecretStore::is_encrypted)
+        );
         let store = crate::security::SecretStore::new(&dir, true);
         let decrypted = store.decrypt(loaded.api_key.as_deref().unwrap()).unwrap();
         assert_eq!(decrypted, "sk-roundtrip");
@@ -12221,20 +12276,24 @@ default_temperature = 0.7
             &feishu.app_secret
         ));
         assert_eq!(store.decrypt(&feishu.app_secret).unwrap(), "feishu-secret");
-        assert!(feishu
-            .encrypt_key
-            .as_deref()
-            .is_some_and(crate::security::SecretStore::is_encrypted));
+        assert!(
+            feishu
+                .encrypt_key
+                .as_deref()
+                .is_some_and(crate::security::SecretStore::is_encrypted)
+        );
         assert_eq!(
             store
                 .decrypt(feishu.encrypt_key.as_deref().unwrap())
                 .unwrap(),
             "feishu-encrypt"
         );
-        assert!(feishu
-            .verification_token
-            .as_deref()
-            .is_some_and(crate::security::SecretStore::is_encrypted));
+        assert!(
+            feishu
+                .verification_token
+                .as_deref()
+                .is_some_and(crate::security::SecretStore::is_encrypted)
+        );
         assert_eq!(
             store
                 .decrypt(feishu.verification_token.as_deref().unwrap())
@@ -13648,9 +13707,11 @@ requires_openai_auth = true
         };
 
         let error = config.validate().expect_err("expected validation failure");
-        assert!(error
-            .to_string()
-            .contains("wire_api must be one of: responses, chat_completions"));
+        assert!(
+            error
+                .to_string()
+                .contains("wire_api must be one of: responses, chat_completions")
+        );
     }
 
     #[test]
@@ -14409,9 +14470,11 @@ default_model = "persisted-profile"
             std::env::var("HTTPS_PROXY").ok().as_deref(),
             Some("http://127.0.0.1:7891")
         );
-        assert!(std::env::var("NO_PROXY")
-            .ok()
-            .is_some_and(|value| value.contains("localhost")));
+        assert!(
+            std::env::var("NO_PROXY")
+                .ok()
+                .is_some_and(|value| value.contains("localhost"))
+        );
 
         clear_proxy_env_test_vars();
     }
@@ -14431,8 +14494,8 @@ default_model = "persisted-profile"
     }
 
     #[test]
-    async fn google_workspace_allowed_operations_reject_duplicate_service_resource_sub_resource_entries(
-    ) {
+    async fn google_workspace_allowed_operations_reject_duplicate_service_resource_sub_resource_entries()
+     {
         let mut config = Config::default();
         config.google_workspace.allowed_operations = vec![
             GoogleWorkspaceAllowedOperation {

@@ -5,7 +5,7 @@
 // DreamTask — background "dreaming" task for proactive insights.
 // Mirrors claude-code-typescript-src`tasks/DreamTask/`.
 
-use super::types::{Task, TaskId, TaskState, TaskType, TaskHandle, generate_task_id};
+use super::types::{Task, TaskHandle, TaskId, TaskState, TaskType, generate_task_id};
 use tokio::sync::watch;
 
 pub struct DreamSpawnInput {

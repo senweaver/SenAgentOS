@@ -215,10 +215,12 @@ mod tests {
 
         let schema = tool.parameters_schema();
         assert!(schema["properties"]["pattern"].is_object());
-        assert!(schema["required"]
-            .as_array()
-            .unwrap()
-            .contains(&json!("pattern")));
+        assert!(
+            schema["required"]
+                .as_array()
+                .unwrap()
+                .contains(&json!("pattern"))
+        );
     }
 
     #[tokio::test]
@@ -417,10 +419,12 @@ mod tests {
         let result = tool.execute(json!({"pattern": "[invalid"})).await.unwrap();
 
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_ref()
-            .unwrap()
-            .contains("Invalid glob pattern"));
+        assert!(
+            result
+                .error
+                .as_ref()
+                .unwrap()
+                .contains("Invalid glob pattern")
+        );
     }
 }

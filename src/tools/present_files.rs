@@ -168,9 +168,7 @@ impl Tool for PresentFilesTool {
                 "rs" | "py" | "js" | "ts" | "go" | "java" | "c" | "cpp" | "h" | "cs" => {
                     "source code"
                 }
-                "md" | "txt" | "log" | "csv" | "toml" | "yaml" | "yml" | "json" | "xml" => {
-                    "text"
-                }
+                "md" | "txt" | "log" | "csv" | "toml" | "yaml" | "yml" | "json" | "xml" => "text",
                 "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "svg" => "image",
                 "pdf" => "pdf",
                 "zip" | "tar" | "gz" | "7z" | "rar" => "archive",
@@ -189,10 +187,7 @@ impl Tool for PresentFilesTool {
             )
             .ok();
 
-            let is_text = matches!(
-                file_type,
-                "source code" | "text" | "web"
-            );
+            let is_text = matches!(file_type, "source code" | "text" | "web");
             if is_text && size <= MAX_INLINE_SIZE {
                 match tokio::fs::read_to_string(&full_path).await {
                     Ok(content) => {

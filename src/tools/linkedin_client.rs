@@ -3,8 +3,8 @@
 // Licensed under the MIT License.
 use crate::config::LinkedInImageConfig;
 use anyhow::Context;
-use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Method;
+use reqwest::header::{HeaderMap, HeaderValue};
 use serde_json::json;
 use std::path::{Path, PathBuf};
 
@@ -144,11 +144,13 @@ impl LinkedInClient {
         let bearer = format!("Bearer {}", token);
         headers.insert(
             reqwest::header::AUTHORIZATION,
-            HeaderValue::from_str(&bearer).unwrap_or_else(|_| HeaderValue::from_static("Bearer INVALID")),
+            HeaderValue::from_str(&bearer)
+                .unwrap_or_else(|_| HeaderValue::from_static("Bearer INVALID")),
         );
         headers.insert(
             "LinkedIn-Version",
-            HeaderValue::from_str(&self.api_version).unwrap_or_else(|_| HeaderValue::from_static("202501")),
+            HeaderValue::from_str(&self.api_version)
+                .unwrap_or_else(|_| HeaderValue::from_static("202501")),
         );
         headers.insert(
             "X-Restli-Protocol-Version",
@@ -606,7 +608,8 @@ impl LinkedInClient {
         let mut upload_headers = HeaderMap::new();
         upload_headers.insert(
             reqwest::header::AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {token}")).map_err(|e| anyhow::anyhow!("invalid bearer header: {e}"))?,
+            HeaderValue::from_str(&format!("Bearer {token}"))
+                .map_err(|e| anyhow::anyhow!("invalid bearer header: {e}"))?,
         );
 
         let upload_resp = client
@@ -1648,10 +1651,12 @@ mod tests {
         let generator = ImageGenerator::new(config, tmp.path().to_path_buf());
         let result = generator.generate("Test").await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("All image generation providers failed"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("All image generation providers failed")
+        );
     }
 
     #[tokio::test]
@@ -1716,10 +1721,12 @@ mod tests {
 
         let result = ImageGenerator::read_env_var(tmp.path(), "STABILITY_API_KEY").await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("STABILITY_API_KEY"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("STABILITY_API_KEY")
+        );
     }
 
     #[test]

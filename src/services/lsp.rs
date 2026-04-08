@@ -134,12 +134,7 @@ impl LspService {
         inner
             .servers
             .iter()
-            .map(|(id, state)| {
-                (
-                    id.clone(),
-                    format!("{:?}", state.status),
-                )
-            })
+            .map(|(id, state)| (id.clone(), format!("{:?}", state.status)))
             .collect()
     }
 }

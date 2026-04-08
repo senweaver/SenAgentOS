@@ -11,4 +11,4 @@ pub mod prompt;
 pub mod types;
 
 pub use companion::Companion;
-pub use types::{BuddyMood, BuddyConfig, BuddyEvent};
+pub use types::{BuddyConfig, BuddyEvent, BuddyMood};

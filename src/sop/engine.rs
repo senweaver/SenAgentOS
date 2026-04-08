@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use tracing::{info, warn};
 
 use super::condition::evaluate_condition;
@@ -1075,9 +1075,11 @@ mod tests {
                 .len(),
             1
         );
-        assert!(engine
-            .match_trigger(&mqtt_event("plant/pump_3/temperature", "50"))
-            .is_empty());
+        assert!(
+            engine
+                .match_trigger(&mqtt_event("plant/pump_3/temperature", "50"))
+                .is_empty()
+        );
     }
 
     #[test]
@@ -2085,9 +2087,11 @@ mod tests {
         )]);
         let result = engine.start_deterministic_run("s1", manual_event());
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("not in deterministic mode"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("not in deterministic mode")
+        );
     }
 }

@@ -34,8 +34,12 @@ impl WebAuthnState {
     /// Remove challenges older than 5 minutes.
     pub fn prune_expired(&self) {
         let max_age = std::time::Duration::from_secs(300);
-        self.pending_registrations.lock().retain(|_, (_, t)| t.elapsed() < max_age);
-        self.pending_authentications.lock().retain(|_, (_, t)| t.elapsed() < max_age);
+        self.pending_registrations
+            .lock()
+            .retain(|_, (_, t)| t.elapsed() < max_age);
+        self.pending_authentications
+            .lock()
+            .retain(|_, (_, t)| t.elapsed() < max_age);
     }
 }
 
@@ -99,10 +103,10 @@ pub async fn handle_register_start(
         .start_registration(&body.user_id, &body.user_name)
     {
         Ok((creation, reg_state)) => {
-            webauthn
-                .pending_registrations
-                .lock()
-                .insert(reg_state.challenge.clone(), (reg_state, std::time::Instant::now()));
+            webauthn.pending_registrations.lock().insert(
+                reg_state.challenge.clone(),
+                (reg_state, std::time::Instant::now()),
+            );
             Json(serde_json::json!(creation)).into_response()
         }
         Err(e) => (
@@ -191,10 +195,10 @@ pub async fn handle_auth_start(
 
     match webauthn.manager.start_authentication(&body.user_id) {
         Ok((request, auth_state)) => {
-            webauthn
-                .pending_authentications
-                .lock()
-                .insert(auth_state.challenge.clone(), (auth_state, std::time::Instant::now()));
+            webauthn.pending_authentications.lock().insert(
+                auth_state.challenge.clone(),
+                (auth_state, std::time::Instant::now()),
+            );
             Json(serde_json::json!(request)).into_response()
         }
         Err(e) => (

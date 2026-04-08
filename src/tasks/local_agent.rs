@@ -7,7 +7,7 @@
 
 use std::path::PathBuf;
 
-use super::types::{Task, TaskId, TaskState, TaskType, TaskHandle, generate_task_id};
+use super::types::{Task, TaskHandle, TaskId, TaskState, TaskType, generate_task_id};
 use tokio::sync::watch;
 
 pub struct LocalAgentSpawnInput {

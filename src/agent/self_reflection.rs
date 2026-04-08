@@ -8,11 +8,11 @@
 //! for subsequent turns.
 
 use crate::providers::traits::{ChatMessage, Provider};
+use parking_lot::RwLock;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::sync::Arc;
-use parking_lot::RwLock;
 
 /// Configuration for the self-reflection system.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -34,9 +34,15 @@ pub struct SelfReflectionConfig {
     pub max_inject_chars: usize,
 }
 
-fn default_interval() -> u32 { 1 }
-fn default_max_insights() -> usize { 10 }
-fn default_max_inject_chars() -> usize { 1500 }
+fn default_interval() -> u32 {
+    1
+}
+fn default_max_insights() -> usize {
+    10
+}
+fn default_max_inject_chars() -> usize {
+    1500
+}
 
 impl Default for SelfReflectionConfig {
     fn default() -> Self {
@@ -146,8 +152,15 @@ impl ReflectionEngine {
 
         let new_insights = if self.config.llm_reflection {
             if let (Some(prov), Some(m)) = (provider, model) {
-                self.llm_reflect(prov, m, user_query, assistant_response, tool_outcomes, reward)
-                    .await
+                self.llm_reflect(
+                    prov,
+                    m,
+                    user_query,
+                    assistant_response,
+                    tool_outcomes,
+                    reward,
+                )
+                .await
             } else {
                 self.heuristic_reflect(user_query, assistant_response, tool_outcomes, reward)
             }
@@ -165,8 +178,7 @@ impl ReflectionEngine {
                 continue;
             }
             let duplicate = insights.iter().any(|existing| {
-                existing.category == insight.category
-                    && existing.adjustment == insight.adjustment
+                existing.category == insight.category && existing.adjustment == insight.adjustment
             });
             if !duplicate {
                 if insights.len() >= self.config.max_insights {
@@ -203,7 +215,11 @@ impl ReflectionEngine {
             "User: {}\n\nAssistant: {}\n\nTools used:\n{}\n\nReward score: {:.2}",
             truncate(user_query, 800),
             truncate(assistant_response, 1200),
-            if tools_summary.is_empty() { "  (none)".to_string() } else { tools_summary },
+            if tools_summary.is_empty() {
+                "  (none)".to_string()
+            } else {
+                tools_summary
+            },
             reward,
         );
 
@@ -389,14 +405,13 @@ mod tests {
         };
         let engine = ReflectionEngine::new(&config);
 
-        let insights = engine.heuristic_reflect(
-            "complex question",
-            "short answer",
-            &[],
-            -0.5,
-        );
+        let insights = engine.heuristic_reflect("complex question", "short answer", &[], -0.5);
         assert!(!insights.is_empty());
-        assert!(insights.iter().any(|i| i.category == InsightCategory::ResponseQuality));
+        assert!(
+            insights
+                .iter()
+                .any(|i| i.category == InsightCategory::ResponseQuality)
+        );
     }
 
     #[test]
@@ -410,7 +425,11 @@ mod tests {
             &[("web_search", false)],
             0.0,
         );
-        assert!(insights.iter().any(|i| i.category == InsightCategory::ToolUsage));
+        assert!(
+            insights
+                .iter()
+                .any(|i| i.category == InsightCategory::ToolUsage)
+        );
     }
 
     #[test]

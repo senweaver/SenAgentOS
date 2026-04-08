@@ -39,7 +39,7 @@ use async_trait::async_trait;
 use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 
 /// Environment variable for overriding the path to the `claude` binary.
 pub const CLAUDE_CODE_PATH_ENV: &str = "CLAUDE_CODE_PATH";

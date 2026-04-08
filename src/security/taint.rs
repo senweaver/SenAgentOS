@@ -53,7 +53,11 @@ pub struct TaintedValue {
 
 impl TaintedValue {
     /// Create a new tainted value with specified labels.
-    pub fn new(value: impl Into<String>, labels: Vec<TaintLabel>, source: impl Into<String>) -> Self {
+    pub fn new(
+        value: impl Into<String>,
+        labels: Vec<TaintLabel>,
+        source: impl Into<String>,
+    ) -> Self {
         Self {
             value: value.into(),
             labels: labels.into_iter().collect(),
@@ -73,11 +77,7 @@ impl TaintedValue {
 
     /// Create a value tainted with external network source.
     pub fn from_network(value: impl Into<String>, source: impl Into<String>) -> Self {
-        Self::new(
-            value,
-            vec![TaintLabel::ExternalNetwork],
-            source,
-        )
+        Self::new(value, vec![TaintLabel::ExternalNetwork], source)
     }
 
     /// Create a value tainted with user input.
@@ -209,7 +209,11 @@ pub struct TaintSink {
 
 impl TaintSink {
     /// Create a new taint sink.
-    pub fn new(name: impl Into<String>, blocked: Vec<TaintLabel>, description: impl Into<String>) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        blocked: Vec<TaintLabel>,
+        description: impl Into<String>,
+    ) -> Self {
         Self {
             name: name.into(),
             blocked_labels: blocked.into_iter().collect(),
@@ -219,10 +223,7 @@ impl TaintSink {
 
     /// Check if a value can safely enter this sink.
     pub fn check(&self, value: &TaintedValue) -> Result<(), TaintViolation> {
-        let blocked: Vec<_> = value
-            .labels
-            .intersection(&self.blocked_labels)
-            .collect();
+        let blocked: Vec<_> = value.labels.intersection(&self.blocked_labels).collect();
 
         if blocked.is_empty() {
             Ok(())
@@ -297,7 +298,11 @@ impl std::fmt::Display for TaintViolation {
         write!(
             f,
             "Taint violation: data with labels [{}] from source '{}' cannot enter sink '{}' (value preview: {})",
-            self.labels.iter().map(|l| format!("{:?}", l)).collect::<Vec<_>>().join(", "),
+            self.labels
+                .iter()
+                .map(|l| format!("{:?}", l))
+                .collect::<Vec<_>>()
+                .join(", "),
             self.data_source,
             self.sink_name,
             self.value_preview
@@ -308,7 +313,11 @@ impl std::fmt::Display for TaintViolation {
 impl TaintViolation {
     /// Get the labels as a formatted string.
     pub fn labels_string(&self) -> String {
-        self.labels.iter().map(|l| format!("{:?}", l)).collect::<Vec<_>>().join(", ")
+        self.labels
+            .iter()
+            .map(|l| format!("{:?}", l))
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 }
 

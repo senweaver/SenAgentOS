@@ -33,7 +33,7 @@
 
 use super::AppState;
 use axum::{
-    extract::{State},
+    extract::State,
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Json},
 };
@@ -86,7 +86,10 @@ fn validate_device_alias(alias: &str) -> Result<(), &'static str> {
     if alias.is_empty() || alias.len() > 64 {
         return Err("Device alias must be 1–64 characters");
     }
-    if !alias.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+    if !alias
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+    {
         return Err("Device alias must contain only alphanumerics, hyphens, and underscores");
     }
     Ok(())
@@ -140,7 +143,7 @@ pub async fn handle_hardware_pin(
                 StatusCode::BAD_REQUEST,
                 Json(serde_json::json!({ "error": format!("Invalid JSON: {e}") })),
             )
-                .into_response()
+                .into_response();
         }
     };
 
@@ -162,7 +165,7 @@ pub async fn handle_hardware_pin(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({ "error": e })),
             )
-                .into_response()
+                .into_response();
         }
     };
 
@@ -173,7 +176,7 @@ pub async fn handle_hardware_pin(
                 StatusCode::BAD_REQUEST,
                 Json(serde_json::json!({ "error": e })),
             )
-                .into_response()
+                .into_response();
         }
     };
 
@@ -243,7 +246,7 @@ pub async fn handle_hardware_context_post(
                 StatusCode::BAD_REQUEST,
                 Json(serde_json::json!({ "error": format!("Invalid JSON: {e}") })),
             )
-                .into_response()
+                .into_response();
         }
     };
 
@@ -271,7 +274,7 @@ pub async fn handle_hardware_context_post(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({ "error": e })),
             )
-                .into_response()
+                .into_response();
         }
     };
 
@@ -282,7 +285,7 @@ pub async fn handle_hardware_context_post(
                 StatusCode::BAD_REQUEST,
                 Json(serde_json::json!({ "error": e })),
             )
-                .into_response()
+                .into_response();
         }
     };
 
@@ -434,7 +437,7 @@ pub async fn handle_hardware_context_get(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({ "error": e })),
             )
-                .into_response()
+                .into_response();
         }
     };
 

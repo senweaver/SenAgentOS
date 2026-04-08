@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
-use crate::auth::openai_oauth::extract_account_id_from_jwt;
 use crate::auth::AuthService;
+use crate::auth::openai_oauth::extract_account_id_from_jwt;
 use crate::multimodal;
-use crate::providers::traits::{ChatMessage, Provider, ProviderCapabilities};
 use crate::providers::ProviderRuntimeOptions;
+use crate::providers::traits::{ChatMessage, Provider, ProviderCapabilities};
 use async_trait::async_trait;
 use futures_util::StreamExt;
 use reqwest::Client;
@@ -1017,8 +1017,7 @@ data: [DONE]
 
     #[test]
     fn decode_utf8_stream_chunks_handles_multibyte_split_across_chunks() {
-        let payload =
-            "data: {\"type\":\"response.output_text.delta\",\"delta\":\"Hello 世\"}\n\ndata: [DONE]\n";
+        let payload = "data: {\"type\":\"response.output_text.delta\",\"delta\":\"Hello 世\"}\n\ndata: [DONE]\n";
         let bytes = payload.as_bytes();
         let split_at = payload.find('世').unwrap() + 1;
 

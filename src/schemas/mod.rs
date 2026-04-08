@@ -7,4 +7,4 @@
 
 pub mod hooks;
 
-pub use hooks::{HookSchema, HookEventSchema, validate_hook_config};
+pub use hooks::{HookEventSchema, HookSchema, validate_hook_config};

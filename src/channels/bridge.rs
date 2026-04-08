@@ -99,9 +99,7 @@ impl ChannelBridge {
             (MessageFormat::PlainText, MessageFormat::TelegramMarkdownV2) => {
                 escape_telegram(&msg.content)
             }
-            (MessageFormat::PlainText, MessageFormat::SlackMrkdwn) => {
-                escape_slack(&msg.content)
-            }
+            (MessageFormat::PlainText, MessageFormat::SlackMrkdwn) => escape_slack(&msg.content),
             (MessageFormat::PlainText, MessageFormat::Html) => html_escape(&msg.content),
 
             (MessageFormat::TelegramMarkdownV2, MessageFormat::PlainText) => {
@@ -355,8 +353,7 @@ mod tests {
     #[test]
     fn html_strip() {
         let bridge = ChannelBridge::default();
-        let msg =
-            ChannelBridge::bridge("<p>Hello &amp; world</p>".into(), MessageFormat::Html);
+        let msg = ChannelBridge::bridge("<p>Hello &amp; world</p>".into(), MessageFormat::Html);
         let result = bridge.convert(&msg, MessageFormat::PlainText);
         assert_eq!(result, "Hello & world");
     }

@@ -25,13 +25,13 @@ pub mod memory_cmd;
 pub mod model;
 pub mod plan;
 pub mod plugin_cmd;
+pub mod registry;
 pub mod resume;
 pub mod skills_cmd;
 pub mod status;
 pub mod tasks_cmd;
 pub mod theme;
 pub mod voice_cmd;
-pub mod registry;
 
 #[allow(unused_imports)]
-pub use registry::{CommandRegistry, SlashCommand, CommandContext, CommandResult};
+pub use registry::{CommandContext, CommandRegistry, CommandResult, SlashCommand};

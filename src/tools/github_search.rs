@@ -96,10 +96,7 @@ impl Tool for GitHubSearchTool {
             .unwrap_or("repositories");
 
         let sort = args.get("sort").and_then(|v| v.as_str());
-        let order = args
-            .get("order")
-            .and_then(|v| v.as_str())
-            .unwrap_or("desc");
+        let order = args.get("order").and_then(|v| v.as_str()).unwrap_or("desc");
 
         let max = args
             .get("max_results")
@@ -208,10 +205,7 @@ impl Tool for GitHubSearchTool {
 
 fn format_repos(items: &[serde_json::Value], output: &mut String) {
     for (i, item) in items.iter().enumerate() {
-        let name = item
-            .get("full_name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let name = item.get("full_name").and_then(|v| v.as_str()).unwrap_or("");
         let desc = item
             .get("description")
             .and_then(|v| v.as_str())
@@ -224,14 +218,8 @@ fn format_repos(items: &[serde_json::Value], output: &mut String) {
             .get("forks_count")
             .and_then(|v| v.as_u64())
             .unwrap_or(0);
-        let lang = item
-            .get("language")
-            .and_then(|v| v.as_str())
-            .unwrap_or("?");
-        let url = item
-            .get("html_url")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let lang = item.get("language").and_then(|v| v.as_str()).unwrap_or("?");
+        let url = item.get("html_url").and_then(|v| v.as_str()).unwrap_or("");
         let updated = item
             .get("updated_at")
             .and_then(|v| v.as_str())
@@ -260,10 +248,7 @@ fn format_code(items: &[serde_json::Value], output: &mut String) {
             .and_then(|r| r.get("full_name"))
             .and_then(|v| v.as_str())
             .unwrap_or("");
-        let url = item
-            .get("html_url")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let url = item.get("html_url").and_then(|v| v.as_str()).unwrap_or("");
 
         output.push_str(&format!(
             "{}. {}/{}\n   Repo: {}\n   {}\n\n",
@@ -281,14 +266,8 @@ fn format_issues(items: &[serde_json::Value], output: &mut String) {
     for (i, item) in items.iter().enumerate() {
         let title = item.get("title").and_then(|v| v.as_str()).unwrap_or("");
         let state = item.get("state").and_then(|v| v.as_str()).unwrap_or("");
-        let url = item
-            .get("html_url")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
-        let comments = item
-            .get("comments")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0);
+        let url = item.get("html_url").and_then(|v| v.as_str()).unwrap_or("");
+        let comments = item.get("comments").and_then(|v| v.as_u64()).unwrap_or(0);
         let user = item
             .get("user")
             .and_then(|u| u.get("login"))
@@ -319,10 +298,7 @@ fn format_issues(items: &[serde_json::Value], output: &mut String) {
 fn format_users(items: &[serde_json::Value], output: &mut String) {
     for (i, item) in items.iter().enumerate() {
         let login = item.get("login").and_then(|v| v.as_str()).unwrap_or("");
-        let url = item
-            .get("html_url")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let url = item.get("html_url").and_then(|v| v.as_str()).unwrap_or("");
         let user_type = item.get("type").and_then(|v| v.as_str()).unwrap_or("User");
 
         output.push_str(&format!(

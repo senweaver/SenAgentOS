@@ -1,9 +1,22 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
-use crate::memory::{self, decay, Memory};
+//! Memory context loader with token-budgeted injection.
+//!
+//! Implements the [`MemoryLoader`] trait, retrieving relevant memories and formatting
+//! them for injection into the system prompt. Memory entries are filtered by
+//! relevance score and limited by both entry count and total token budget,
+//! matching DeerFlow's `MemoryMiddleware` token capping.
+
+use crate::memory::{self, Memory, decay};
 use async_trait::async_trait;
-use std::fmt::Write;
+
+/// Default maximum tokens for memory context injection (≈2000 tokens ≈ 8000 chars).
+/// This is the per-turn budget for retrieved memories in the system prompt.
+pub const DEFAULT_MAX_INJECTION_TOKENS: usize = 2000;
+
+/// Rough chars-per-token ratio used for estimation (≈4 chars/token).
+const CHARS_PER_TOKEN: usize = 4;
 
 #[async_trait]
 pub trait MemoryLoader: Send + Sync {
@@ -18,6 +31,9 @@ pub trait MemoryLoader: Send + Sync {
 pub struct DefaultMemoryLoader {
     limit: usize,
     min_relevance_score: f64,
+    /// Maximum tokens for the injected memory context.
+    /// When set, entries are truncated/removed to stay within budget.
+    max_injection_tokens: usize,
 }
 
 impl Default for DefaultMemoryLoader {
@@ -25,6 +41,7 @@ impl Default for DefaultMemoryLoader {
         Self {
             limit: 5,
             min_relevance_score: 0.4,
+            max_injection_tokens: DEFAULT_MAX_INJECTION_TOKENS,
         }
     }
 }
@@ -34,7 +51,14 @@ impl DefaultMemoryLoader {
         Self {
             limit: limit.max(1),
             min_relevance_score,
+            max_injection_tokens: DEFAULT_MAX_INJECTION_TOKENS,
         }
+    }
+
+    /// Set the maximum injection token budget. Use `0` for unlimited.
+    pub fn with_max_injection_tokens(mut self, tokens: usize) -> Self {
+        self.max_injection_tokens = tokens;
+        self
     }
 }
 
@@ -57,7 +81,14 @@ impl MemoryLoader for DefaultMemoryLoader {
         decay::apply_time_decay(&mut entries, decay::DEFAULT_HALF_LIFE_DAYS);
 
         let mut context = String::from("[Memory context]\n");
-        for entry in entries {
+        let budget_chars = self.max_injection_tokens * CHARS_PER_TOKEN;
+        let header_footer_chars = "[Memory context]\n[/Memory context]\n".len();
+
+        // Iterate in reverse order (least relevant first) so we can remove items
+        // from the front without breaking iteration.
+        let mut selected_entries = Vec::new();
+
+        for entry in entries.into_iter().rev() {
             if memory::is_assistant_autosave_key(&entry.key) {
                 continue;
             }
@@ -69,7 +100,34 @@ impl MemoryLoader for DefaultMemoryLoader {
                     continue;
                 }
             }
-            let _ = writeln!(context, "- {}: {}", entry.key, entry.content);
+
+            let entry_line = format!("- {}: {}\n", entry.key, entry.content);
+            let projected_len = context.len() + entry_line.len() + header_footer_chars;
+
+            if self.max_injection_tokens > 0 && projected_len > budget_chars {
+                // Would exceed budget. Try truncating the entry.
+                let available = budget_chars
+                    .saturating_sub(context.len() + header_footer_chars + 4); // +4 for ellipsis
+                if available >= entry.key.len() + 8 {
+                    // At least "key: ..." can fit
+                    let truncated = if entry.content.len() > available - entry.key.len() - 6 {
+                        format!("{}: {}…", entry.key, &entry.content[..available.saturating_sub(entry.key.len() + 6)])
+                    } else {
+                        format!("{}: {}", entry.key, entry.content)
+                    };
+                    selected_entries.push(truncated);
+                    break; // Budget exhausted
+                } else {
+                    break; // Not enough space even for key
+                }
+            } else {
+                selected_entries.push(entry_line);
+            }
+        }
+
+        // Add entries in forward order (most relevant first)
+        for entry_line in selected_entries.into_iter().rev() {
+            context.push_str(&entry_line);
         }
 
         // If all entries were below threshold, return empty
@@ -261,5 +319,79 @@ mod tests {
         assert!(context.contains("user_fact"));
         assert!(!context.contains("assistant_resp_legacy"));
         assert!(!context.contains("fabricated detail"));
+    }
+
+    #[tokio::test]
+    async fn token_budget_truncates_large_context() {
+        // Very small token budget: 10 tokens ≈ 40 chars
+        let loader = DefaultMemoryLoader::new(10, 0.0)
+            .with_max_injection_tokens(10);
+
+        let big_content = "x".repeat(200);
+        let memory = MockMemoryWithEntries {
+            entries: Arc::new(vec![
+                MemoryEntry {
+                    id: "1".into(),
+                    key: "big_fact".into(),
+                    content: big_content.clone(),
+                    category: MemoryCategory::Core,
+                    timestamp: "now".into(),
+                    session_id: None,
+                    score: Some(0.9),
+                    namespace: "default".into(),
+                    importance: None,
+                    superseded_by: None,
+                },
+            ]),
+        };
+
+        let context = loader
+            .load_context(&memory, "test", None)
+            .await
+            .unwrap();
+
+        // The content should be truncated within budget
+        assert!(context.contains("big_fact"));
+        assert!(context.len() < big_content.len() + 100,
+            "context ({}) should be much smaller than original content ({})",
+            context.len(),
+            big_content.len()
+        );
+    }
+
+    #[tokio::test]
+    async fn unlimited_budget_keeps_all_entries() {
+        // Unlimited budget (0 tokens = no limit)
+        let loader = DefaultMemoryLoader::new(10, 0.0)
+            .with_max_injection_tokens(0);
+
+        let entries: Vec<MemoryEntry> = (0..5)
+            .map(|i| MemoryEntry {
+                id: format!("{}", i),
+                key: format!("fact_{}", i),
+                content: format!("content {}", i),
+                category: MemoryCategory::Core,
+                timestamp: "now".into(),
+                session_id: None,
+                score: Some(0.9),
+                namespace: "default".into(),
+                importance: None,
+                superseded_by: None,
+            })
+            .collect();
+
+        let memory = MockMemoryWithEntries {
+            entries: Arc::new(entries),
+        };
+
+        let context = loader
+            .load_context(&memory, "test", None)
+            .await
+            .unwrap();
+
+        // All 5 entries should be present
+        for i in 0..5 {
+            assert!(context.contains(&format!("fact_{}", i)), "fact_{} should be present", i);
+        }
     }
 }

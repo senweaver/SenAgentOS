@@ -382,6 +382,18 @@ impl AcpServer {
                         "content": delta,
                     }),
                 },
+                TurnEvent::Clarification { request } => JsonRpcNotification {
+                    jsonrpc: "2.0",
+                    method: "session/event",
+                    params: serde_json::json!({
+                        "sessionId": session_id,
+                        "type": "clarification",
+                        "category": request.category,
+                        "question": request.question,
+                        "choices": request.choices,
+                        "context": request.context,
+                    }),
+                },
             };
             self.write_notification(&notification).await;
         }

@@ -42,7 +42,7 @@ use async_trait::async_trait;
 use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 
 /// Environment variable for overriding the path to the `gemini` binary.
 pub const GEMINI_CLI_PATH_ENV: &str = "GEMINI_CLI_PATH";
@@ -308,9 +308,10 @@ mod tests {
     #[test]
     fn validate_temperature_rejects_custom_value() {
         let err = GeminiCliProvider::validate_temperature(0.2).unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("temperature unsupported by Gemini CLI"));
+        assert!(
+            err.to_string()
+                .contains("temperature unsupported by Gemini CLI")
+        );
     }
 
     #[tokio::test]

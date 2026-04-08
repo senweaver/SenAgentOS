@@ -66,7 +66,14 @@ pub fn flash_nucleo_firmware() -> Result<()> {
 
     println!("Flashing to Nucleo-F401RE (connect via USB)...");
     let flash = Command::new("probe-rs")
-        .args(["run", "--chip", CHIP, elf_path.to_str().ok_or_else(|| anyhow::anyhow!("firmware path contains non-UTF-8 characters"))?])
+        .args([
+            "run",
+            "--chip",
+            CHIP,
+            elf_path
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("firmware path contains non-UTF-8 characters"))?,
+        ])
         .output()
         .context("probe-rs run failed")?;
 
@@ -81,6 +88,8 @@ pub fn flash_nucleo_firmware() -> Result<()> {
 
     println!("SenAgentOS Nucleo firmware flashed successfully.");
     println!("The Nucleo now supports: ping, capabilities, gpio_read, gpio_write.");
-    println!("Add to config.toml: board = \"nucleo-f401re\", transport = \"serial\", path = \"/dev/ttyACM0\"");
+    println!(
+        "Add to config.toml: board = \"nucleo-f401re\", transport = \"serial\", path = \"/dev/ttyACM0\""
+    );
     Ok(())
 }

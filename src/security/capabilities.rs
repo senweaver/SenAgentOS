@@ -135,7 +135,9 @@ pub enum CapabilityError {
     Denied { reason: String },
     #[error("Invalid capability pattern: {pattern}")]
     InvalidPattern { pattern: String },
-    #[error("Capability inheritance violation: child cannot have {child_capability} without parent having {parent_capability}")]
+    #[error(
+        "Capability inheritance violation: child cannot have {child_capability} without parent having {parent_capability}"
+    )]
     InheritanceViolation {
         child_capability: String,
         parent_capability: String,
@@ -165,9 +167,7 @@ pub fn capability_matches(granted: &Capability, required: &Capability) -> bool {
         (DirWrite { path: g }, DirWrite { path: r }) => path_matches(g, r),
 
         // Net patterns
-        (NetFetch { host_pattern: g }, NetFetch { host_pattern: r }) => {
-            host_pattern_matches(g, r)
-        }
+        (NetFetch { host_pattern: g }, NetFetch { host_pattern: r }) => host_pattern_matches(g, r),
 
         // Shell patterns
         (ShellExec { command_pattern: g }, ShellExec { command_pattern: r }) => {
@@ -277,10 +277,7 @@ pub fn validate_capability_inheritance(
         if !covered {
             return Err(CapabilityError::InheritanceViolation {
                 child_capability: format!("{:?}", child_cap),
-                parent_capability: format!(
-                    "none matching among {} parent caps",
-                    parent_caps.len()
-                ),
+                parent_capability: format!("none matching among {} parent caps", parent_caps.len()),
             });
         }
     }
@@ -289,10 +286,7 @@ pub fn validate_capability_inheritance(
 }
 
 /// Check if any capability in a set matches the required capability.
-pub fn check_capabilities(
-    granted: &[Capability],
-    required: &Capability,
-) -> CapabilityCheck {
+pub fn check_capabilities(granted: &[Capability], required: &Capability) -> CapabilityCheck {
     for cap in granted {
         if capability_matches(cap, required) {
             return CapabilityCheck::Granted;
@@ -300,10 +294,7 @@ pub fn check_capabilities(
     }
 
     CapabilityCheck::Denied {
-        reason: format!(
-            "No capability matching {:?} found in granted set",
-            required
-        ),
+        reason: format!("No capability matching {:?} found in granted set", required),
     }
 }
 
@@ -321,8 +312,12 @@ pub fn default_capabilities() -> Vec<Capability> {
 /// Build a restricted set of capabilities (read-only).
 pub fn readonly_capabilities() -> Vec<Capability> {
     vec![
-        Capability::FileRead { pattern: "*".to_string() },
-        Capability::DirRead { path: "/".to_string() },
+        Capability::FileRead {
+            pattern: "*".to_string(),
+        },
+        Capability::DirRead {
+            path: "/".to_string(),
+        },
         Capability::MemoryRead,
         Capability::LlmCall,
         Capability::EnvRead,
@@ -484,10 +479,7 @@ mod tests {
 
     #[test]
     fn test_capability_check() {
-        let caps = vec![
-            Capability::ToolAll,
-            Capability::MemoryRead,
-        ];
+        let caps = vec![Capability::ToolAll, Capability::MemoryRead];
 
         assert!(check_capabilities(&caps, &Capability::MemoryRead).is_granted());
         assert!(
@@ -499,9 +491,7 @@ mod tests {
             )
             .is_granted()
         );
-        assert!(
-            check_capabilities(&caps, &Capability::MemoryWrite).is_denied()
-        );
+        assert!(check_capabilities(&caps, &Capability::MemoryWrite).is_denied());
     }
 
     #[test]

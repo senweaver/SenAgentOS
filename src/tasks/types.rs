@@ -4,8 +4,8 @@
 //
 // Core task types — mirrors claude-code-typescript-src`Task.ts`.
 
-use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use tokio::sync::watch;
 
 // ---------------------------------------------------------------------------
@@ -137,7 +137,12 @@ pub struct TaskState {
 }
 
 impl TaskState {
-    pub fn new(id: TaskId, task_type: TaskType, description: String, tool_use_id: Option<String>) -> Self {
+    pub fn new(
+        id: TaskId,
+        task_type: TaskType,
+        description: String,
+        tool_use_id: Option<String>,
+    ) -> Self {
         let now_ms = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
@@ -194,9 +199,7 @@ impl TaskState {
 }
 
 fn get_task_output_path(id: &TaskId) -> PathBuf {
-    let base = data_local_dir()
-        .join("senagent")
-        .join("tasks");
+    let base = data_local_dir().join("senagent").join("tasks");
     base.join(format!("{}.output", id.0))
 }
 
@@ -218,7 +221,9 @@ fn data_local_dir() -> PathBuf {
     {
         std::env::var("XDG_DATA_HOME")
             .map(PathBuf::from)
-            .or_else(|_| std::env::var("HOME").map(|h| PathBuf::from(h).join(".local").join("share")))
+            .or_else(|_| {
+                std::env::var("HOME").map(|h| PathBuf::from(h).join(".local").join("share"))
+            })
             .unwrap_or_else(|_| PathBuf::from("."))
     }
 }

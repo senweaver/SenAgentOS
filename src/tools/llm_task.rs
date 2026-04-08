@@ -9,8 +9,8 @@
 
 use super::traits::{Tool, ToolResult};
 use crate::providers::{self, Provider};
-use crate::security::policy::ToolOperation;
 use crate::security::SecurityPolicy;
+use crate::security::policy::ToolOperation;
 use async_trait::async_trait;
 use serde_json::json;
 use std::sync::Arc;
@@ -322,9 +322,11 @@ mod tests {
         let response = r#"{"title": "Test"}"#;
         let result = validate_json_response(response, &schema);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .contains("Missing required field: score"));
+        assert!(
+            result
+                .unwrap_err()
+                .contains("Missing required field: score")
+        );
     }
 
     #[test]

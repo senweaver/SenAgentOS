@@ -60,16 +60,13 @@ impl XmlToolDispatcher {
                             remaining = &remaining[start + end + 12..];
                             continue;
                         }
-                        let arguments = parsed
-                            .get("arguments")
-                            .cloned()
-                            .unwrap_or_else(|| {
-                                tracing::warn!(
-                                    tool = %name,
-                                    "XML tool call missing 'arguments' key; defaulting to empty object"
-                                );
-                                Value::Object(serde_json::Map::new())
-                            });
+                        let arguments = parsed.get("arguments").cloned().unwrap_or_else(|| {
+                            tracing::warn!(
+                                tool = %name,
+                                "XML tool call missing 'arguments' key; defaulting to empty object"
+                            );
+                            Value::Object(serde_json::Map::new())
+                        });
                         calls.push(ParsedToolCall {
                             name,
                             arguments,

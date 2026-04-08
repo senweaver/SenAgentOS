@@ -25,8 +25,8 @@
 //!     .collect();
 //! ```
 
-use async_trait::async_trait;
 use crate::traits::{Tool as RobotTool, ToolResult as RobotToolResult};
+use async_trait::async_trait;
 use serde_json::Value as JsonValue;
 
 /// Adapter that wraps a robot-kit `Tool` as a SenAgentOS `Tool`.
@@ -102,8 +102,6 @@ impl IntoSenAgentTools for Vec<Box<dyn RobotTool>> {
 /// let config = RobotConfig::default();
 /// let tools: Vec<Box<dyn Tool>> = create_senagent_tools(&config);
 /// ```
-pub fn create_senagent_tools(
-    config: &crate::RobotConfig,
-) -> Vec<Box<dyn senagentos::tools::Tool>> {
+pub fn create_senagent_tools(config: &crate::RobotConfig) -> Vec<Box<dyn senagentos::tools::Tool>> {
     crate::create_tools(config).into_senagent_tools()
 }

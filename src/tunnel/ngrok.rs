@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
-use super::{kill_shared, new_shared_process, SharedProcess, Tunnel, TunnelProcess};
-use anyhow::{bail, Result};
+use super::{SharedProcess, Tunnel, TunnelProcess, kill_shared, new_shared_process};
+use anyhow::{Result, bail};
 use tokio::io::AsyncBufReadExt;
 use tokio::process::Command;
 

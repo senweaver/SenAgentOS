@@ -6,8 +6,8 @@
 //! Prevents resource exhaustion from too many concurrent delegate/swarm tasks
 //! by enforcing a configurable maximum.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

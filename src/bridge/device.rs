@@ -114,9 +114,7 @@ impl DeviceManager {
     pub async fn revoke_device(&self, device_id: &str) -> bool {
         let mut inner = self.inner.write().await;
         let before = inner.trusted_devices.len();
-        inner
-            .trusted_devices
-            .retain(|d| d.device_id != device_id);
+        inner.trusted_devices.retain(|d| d.device_id != device_id);
         inner.trusted_devices.len() < before
     }
 

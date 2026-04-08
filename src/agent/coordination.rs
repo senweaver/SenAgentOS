@@ -67,12 +67,7 @@ impl LockManager {
     }
 
     /// Try to acquire a lock on a resource.
-    pub fn acquire(
-        &self,
-        resource: &str,
-        agent_id: &str,
-        reason: &str,
-    ) -> LockResult {
+    pub fn acquire(&self, resource: &str, agent_id: &str, reason: &str) -> LockResult {
         self.acquire_with_ttl(resource, agent_id, reason, self.default_ttl)
     }
 
@@ -248,12 +243,7 @@ impl BarrierManager {
     }
 
     /// Create a new barrier.
-    pub fn create_barrier(
-        &self,
-        name: &str,
-        expected_agents: HashSet<AgentId>,
-        timeout: Duration,
-    ) {
+    pub fn create_barrier(&self, name: &str, expected_agents: HashSet<AgentId>, timeout: Duration) {
         let mut barriers = self.barriers.write();
         barriers.insert(
             name.to_string(),
@@ -371,7 +361,10 @@ struct VotingSession {
 #[derive(Debug, Clone, PartialEq)]
 pub enum VotingResult {
     /// Vote recorded, session still open.
-    Recorded { votes_cast: usize, votes_needed: usize },
+    Recorded {
+        votes_cast: usize,
+        votes_needed: usize,
+    },
     /// Consensus reached.
     Consensus { winning_value: String, votes: usize },
     /// No consensus (timeout or split vote).
@@ -428,12 +421,7 @@ impl VotingManager {
     }
 
     /// Cast a vote.
-    pub fn cast_vote(
-        &self,
-        session_id: &str,
-        agent_id: &str,
-        value: &str,
-    ) -> VotingResult {
+    pub fn cast_vote(&self, session_id: &str, agent_id: &str, value: &str) -> VotingResult {
         let mut sessions = self.sessions.write();
         let session = match sessions.get_mut(session_id) {
             Some(s) => s,
@@ -639,10 +627,7 @@ mod tests {
     #[test]
     fn lock_contention() {
         let mgr = LockManager::default();
-        assert_eq!(
-            mgr.acquire("res", "a1", "reason"),
-            LockResult::Acquired
-        );
+        assert_eq!(mgr.acquire("res", "a1", "reason"), LockResult::Acquired);
         assert_eq!(
             mgr.acquire("res", "a2", "reason"),
             LockResult::Held {
@@ -655,10 +640,7 @@ mod tests {
     fn lock_reentrant() {
         let mgr = LockManager::default();
         mgr.acquire("res", "a1", "reason");
-        assert_eq!(
-            mgr.acquire("res", "a1", "reason"),
-            LockResult::AlreadyHeld
-        );
+        assert_eq!(mgr.acquire("res", "a1", "reason"), LockResult::AlreadyHeld);
     }
 
     #[test]
@@ -668,10 +650,7 @@ mod tests {
         std::thread::sleep(Duration::from_millis(10));
 
         // Expired lock should allow new acquisition
-        assert_eq!(
-            mgr.acquire("res", "a2", "new owner"),
-            LockResult::Acquired
-        );
+        assert_eq!(mgr.acquire("res", "a2", "new owner"), LockResult::Acquired);
     }
 
     #[test]
@@ -697,10 +676,7 @@ mod tests {
     #[test]
     fn barrier_all_arrive() {
         let mgr = BarrierManager::new();
-        let agents: HashSet<_> = ["a1", "a2", "a3"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
+        let agents: HashSet<_> = ["a1", "a2", "a3"].iter().map(|s| s.to_string()).collect();
         mgr.create_barrier("phase1", agents, Duration::from_secs(60));
 
         assert_eq!(
@@ -723,10 +699,7 @@ mod tests {
     #[test]
     fn barrier_not_found() {
         let mgr = BarrierManager::new();
-        assert_eq!(
-            mgr.arrive("nonexistent", "a1"),
-            BarrierResult::NotFound
-        );
+        assert_eq!(mgr.arrive("nonexistent", "a1"), BarrierResult::NotFound);
     }
 
     #[test]
@@ -744,11 +717,15 @@ mod tests {
     #[test]
     fn voting_consensus() {
         let mgr = VotingManager::new();
-        let eligible: HashSet<_> = ["a1", "a2", "a3"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        mgr.start_session("v1", "Which color?", "a1", eligible, Duration::from_secs(60), 0.5);
+        let eligible: HashSet<_> = ["a1", "a2", "a3"].iter().map(|s| s.to_string()).collect();
+        mgr.start_session(
+            "v1",
+            "Which color?",
+            "a1",
+            eligible,
+            Duration::from_secs(60),
+            0.5,
+        );
 
         let r1 = mgr.cast_vote("v1", "a1", "blue");
         assert!(matches!(r1, VotingResult::Recorded { .. }));
@@ -766,10 +743,7 @@ mod tests {
     #[test]
     fn voting_no_consensus() {
         let mgr = VotingManager::new();
-        let eligible: HashSet<_> = ["a1", "a2", "a3"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
+        let eligible: HashSet<_> = ["a1", "a2", "a3"].iter().map(|s| s.to_string()).collect();
         mgr.start_session("v1", "topic", "a1", eligible, Duration::from_secs(60), 0.8);
 
         mgr.cast_vote("v1", "a1", "red");
@@ -785,10 +759,7 @@ mod tests {
         mgr.start_session("v1", "topic", "a1", eligible, Duration::from_secs(60), 1.0);
 
         mgr.cast_vote("v1", "a1", "yes");
-        assert_eq!(
-            mgr.cast_vote("v1", "a1", "no"),
-            VotingResult::AlreadyVoted
-        );
+        assert_eq!(mgr.cast_vote("v1", "a1", "no"), VotingResult::AlreadyVoted);
     }
 
     // ── Coordinator tests ───────────────────────────────────────

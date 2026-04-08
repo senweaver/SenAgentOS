@@ -45,14 +45,10 @@ pub const MAX_LINE_LENGTH: usize = 2000;
 
 /// Binary file extensions to skip.
 pub const BINARY_EXTENSIONS: &[&str] = &[
-    "png", "jpg", "jpeg", "gif", "bmp", "ico", "webp", "svg",
-    "mp3", "mp4", "avi", "mov", "wav", "flac",
-    "zip", "tar", "gz", "bz2", "xz", "7z", "rar",
-    "exe", "dll", "so", "dylib", "o", "a",
-    "wasm", "pyc", "pyo", "class",
-    "pdf", "doc", "docx", "xls", "xlsx",
-    "ttf", "otf", "woff", "woff2", "eot",
-    "sqlite", "db",
+    "png", "jpg", "jpeg", "gif", "bmp", "ico", "webp", "svg", "mp3", "mp4", "avi", "mov", "wav",
+    "flac", "zip", "tar", "gz", "bz2", "xz", "7z", "rar", "exe", "dll", "so", "dylib", "o", "a",
+    "wasm", "pyc", "pyo", "class", "pdf", "doc", "docx", "xls", "xlsx", "ttf", "otf", "woff",
+    "woff2", "eot", "sqlite", "db",
 ];
 
 /// Check if a file extension is binary.

@@ -15,9 +15,7 @@ use std::sync::Arc;
 
 const MAX_IMAGE_BYTES: u64 = 10_485_760; // 10 MB
 
-const SUPPORTED_EXTENSIONS: &[&str] = &[
-    "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg",
-];
+const SUPPORTED_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"];
 
 pub struct ViewImageTool {
     security: Arc<SecurityPolicy>,
@@ -202,8 +200,12 @@ impl Tool for ViewImageTool {
             use base64::Engine;
             let encoded = base64::engine::general_purpose::STANDARD.encode(&bytes);
             result["base64"] = json!(encoded);
-            result["data_uri"] = json!(format!("data:{mime};base64,{}", &encoded[..64.min(encoded.len())]));
-            result["data_uri_note"] = json!("data_uri is truncated; use base64 field for full data");
+            result["data_uri"] = json!(format!(
+                "data:{mime};base64,{}",
+                &encoded[..64.min(encoded.len())]
+            ));
+            result["data_uri_note"] =
+                json!("data_uri is truncated; use base64 field for full data");
         }
 
         let output = serde_json::to_string_pretty(&result).unwrap_or_default();

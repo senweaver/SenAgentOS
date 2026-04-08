@@ -359,10 +359,8 @@ impl From<Arc<EventBus>> for EventBusHandle {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::event_bus::types::{
-        EventPayload, LifecyclePhase, MemoryOperation, SystemCategory,
-    };
-    use tokio::time::{timeout, Duration};
+    use crate::event_bus::types::{EventPayload, LifecyclePhase, MemoryOperation, SystemCategory};
+    use tokio::time::{Duration, timeout};
 
     #[tokio::test]
     async fn test_broadcast_event() {

@@ -28,28 +28,28 @@ pub mod a2a;
 pub mod hardware_context;
 
 use crate::channels::{
-    session_backend::SessionBackend, session_sqlite::SqliteSessionBackend, Channel,
-    GmailPushChannel, LinqChannel, NextcloudTalkChannel, SendMessage, WatiChannel, WhatsAppChannel,
+    Channel, GmailPushChannel, LinqChannel, NextcloudTalkChannel, SendMessage, WatiChannel,
+    WhatsAppChannel, session_backend::SessionBackend, session_sqlite::SqliteSessionBackend,
 };
 use crate::config::Config;
 use crate::cost::CostTracker;
 use crate::memory::{self, Memory, MemoryCategory};
 use crate::providers::{self, ChatMessage, Provider};
 use crate::runtime;
-use crate::security::pairing::{constant_time_eq, is_public_bind, PairingGuard};
 use crate::security::SecurityPolicy;
+use crate::security::pairing::{PairingGuard, constant_time_eq, is_public_bind};
 use crate::tools;
 use crate::tools::canvas::CanvasStore;
 use crate::tools::traits::ToolSpec;
 use crate::util::truncate_with_ellipsis;
 use anyhow::{Context, Result};
 use axum::{
+    Router,
     body::Bytes,
     extract::{ConnectInfo, Query, State},
-    http::{header, HeaderMap, StatusCode},
+    http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Json},
     routing::{delete, get, post, put},
-    Router,
 };
 use parking_lot::Mutex;
 use std::collections::HashMap;
@@ -383,7 +383,7 @@ pub struct AppState {
 /// Run the HTTP gateway using axum with proper HTTP/1.1 compliance.
 #[allow(clippy::too_many_lines)]
 pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
-    //  -  -  Security: warn on public bind without tunnel or explicit opt-in  -  - 
+    //  -  -  Security: warn on public bind without tunnel or explicit opt-in  -  -
     if is_public_bind(host) && config.tunnel.provider == "none" && !config.gateway.allow_public_bind
     {
         tracing::warn!(
@@ -411,7 +411,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
     );
     crate::guardrails::ensure_global_guardrails(config.guardrails.clone());
 
-    //  -  -  Hooks  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+    //  -  -  Hooks  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     let hooks: Option<std::sync::Arc<crate::hooks::HookRunner>> = if config.hooks.enabled {
         Some(std::sync::Arc::new(crate::hooks::HookRunner::new()))
     } else {
@@ -504,7 +504,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         Some(canvas_store.clone()),
     );
 
-    //  -  -  Wire MCP tools into the gateway tool registry (non-fatal)  -  -  - 
+    //  -  -  Wire MCP tools into the gateway tool registry (non-fatal)  -  -  -
     // Without this, the `/api/tools` endpoint misses MCP tools.
     if config.mcp.enabled && !config.mcp.servers.is_empty() {
         tracing::info!(
@@ -697,7 +697,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         .filter(|gp| gp.enabled)
         .map(|gp| Arc::new(GmailPushChannel::new(gp.clone())));
 
-    //  -  -  Session persistence for WS chat  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+    //  -  -  Session persistence for WS chat  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     let session_backend: Option<Arc<dyn SessionBackend>> = if config.gateway.session_persistence {
         match SqliteSessionBackend::new(&config.workspace_dir) {
             Ok(b) => {
@@ -720,7 +720,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         None
     };
 
-    //  -  -  Pairing guard  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+    //  -  -  Pairing guard  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     let pairing = Arc::new(PairingGuard::new(
         config.gateway.require_pairing,
         &config.gateway.paired_tokens,
@@ -750,7 +750,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         .as_deref()
         .filter(|p| !p.is_empty());
 
-    //  -  -  Tunnel  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+    //  -  -  Tunnel  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     let tunnel = crate::tunnel::create_tunnel(&config.tunnel)?;
     let mut tunnel_url: Option<String> = None;
 
@@ -1012,7 +1012,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
             get(canvas::handle_canvas_history),
         );
 
-    //  -  -  WebAuthn hardware key authentication API (requires webauthn feature)  -  - 
+    //  -  -  WebAuthn hardware key authentication API (requires webauthn feature)  -  -
     #[cfg(feature = "webauthn")]
     let inner = inner
         .route(
@@ -1040,7 +1040,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
             delete(api_webauthn::handle_delete_credential),
         );
 
-    //  -  -  Plugin management API (requires plugins-wasm feature)  -  - 
+    //  -  -  Plugin management API (requires plugins-wasm feature)  -  -
     #[cfg(feature = "plugins-wasm")]
     let inner = inner.route(
         "/api/plugins",
@@ -1106,7 +1106,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         inner
     };
 
-    //  -  -  TLS / mTLS setup  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+    //  -  -  TLS / mTLS setup  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     let tls_acceptor = match &config.gateway.tls {
         Some(tls_cfg) if tls_cfg.enabled => {
             let has_mtls = tls_cfg.client_auth.as_ref().is_some_and(|ca| ca.enabled);
@@ -1204,7 +1204,9 @@ async fn handle_health(State(state): State<AppState>) -> impl IntoResponse {
 const PROMETHEUS_CONTENT_TYPE: &str = "text/plain; version=0.0.4; charset=utf-8";
 
 fn prometheus_disabled_hint() -> String {
-    String::from("# Prometheus backend not enabled. Set [observability] backend = \"prometheus\" in config.\n")
+    String::from(
+        "# Prometheus backend not enabled. Set [observability] backend = \"prometheus\" in config.\n",
+    )
 }
 
 #[cfg(feature = "observability-prometheus")]
@@ -1270,7 +1272,7 @@ async fn handle_pair(
         return (StatusCode::TOO_MANY_REQUESTS, Json(err));
     }
 
-    //  -  -  Auth rate limiting (brute-force protection)  -  - 
+    //  -  -  Auth rate limiting (brute-force protection)  -  -
     if let Err(e) = state.auth_limiter.check_rate_limit(&rate_key) {
         tracing::warn!(" - ? Pairing auth rate limit exceeded for {rate_key}");
         let err = serde_json::json!({
@@ -1410,7 +1412,7 @@ async fn handle_webhook(
         return (StatusCode::TOO_MANY_REQUESTS, Json(err));
     }
 
-    //  -  -  Bearer token auth (pairing) with auth rate limiting  -  - 
+    //  -  -  Bearer token auth (pairing) with auth rate limiting  -  -
     if state.pairing.require_pairing() {
         if let Err(e) = state.auth_limiter.check_rate_limit(&rate_key) {
             tracing::warn!("Webhook: auth rate limit exceeded for {rate_key}");
@@ -1435,7 +1437,7 @@ async fn handle_webhook(
         }
     }
 
-    //  -  -  Webhook secret auth (optional, additional layer)  -  - 
+    //  -  -  Webhook secret auth (optional, additional layer)  -  -
     if let Some(ref secret_hash) = state.webhook_secret_hash {
         let header_hash = headers
             .get("X-Webhook-Secret")
@@ -1453,7 +1455,7 @@ async fn handle_webhook(
         }
     }
 
-    //  -  -  Parse body  -  - 
+    //  -  -  Parse body  -  -
     let Json(webhook_body) = match body {
         Ok(b) => b,
         Err(e) => {
@@ -1465,7 +1467,7 @@ async fn handle_webhook(
         }
     };
 
-    //  -  -  Idempotency (optional)  -  - 
+    //  -  -  Idempotency (optional)  -  -
     if let Some(idempotency_key) = headers
         .get("X-Idempotency-Key")
         .and_then(|v| v.to_str().ok())
@@ -1670,7 +1672,7 @@ async fn handle_whatsapp_message(
         );
     };
 
-    //  -  -  Security: Verify X-Hub-Signature-256 if app_secret is configured  -  - 
+    //  -  -  Security: Verify X-Hub-Signature-256 if app_secret is configured  -  -
     if let Some(ref app_secret) = state.whatsapp_app_secret {
         let signature = headers
             .get("X-Hub-Signature-256")
@@ -1779,7 +1781,7 @@ async fn handle_linq_webhook(
 
     let body_str = String::from_utf8_lossy(&body);
 
-    //  -  -  Security: Verify X-Webhook-Signature if signing_secret is configured  -  - 
+    //  -  -  Security: Verify X-Webhook-Signature if signing_secret is configured  -  -
     if let Some(ref signing_secret) = state.linq_signing_secret {
         let timestamp = headers
             .get("X-Webhook-Timestamp")
@@ -2014,7 +2016,7 @@ async fn handle_nextcloud_talk_webhook(
 
     let body_str = String::from_utf8_lossy(&body);
 
-    //  -  -  Security: Verify Nextcloud Talk HMAC signature if secret is configured  -  - 
+    //  -  -  Security: Verify Nextcloud Talk HMAC signature if secret is configured  -  -
     if let Some(ref webhook_secret) = state.nextcloud_talk_webhook_secret {
         let random = headers
             .get("X-Nextcloud-Talk-Random")

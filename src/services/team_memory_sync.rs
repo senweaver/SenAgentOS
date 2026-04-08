@@ -54,11 +54,7 @@ impl TeamMemorySyncService {
         let now = now_ms();
         inner.local_version += 1;
         let version = inner.local_version;
-        let created_ms = inner
-            .memories
-            .get(key)
-            .map(|m| m.created_ms)
-            .unwrap_or(now);
+        let created_ms = inner.memories.get(key).map(|m| m.created_ms).unwrap_or(now);
         inner.memories.insert(
             key.to_string(),
             TeamMemory {

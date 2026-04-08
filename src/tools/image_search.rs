@@ -82,10 +82,7 @@ impl Tool for ImageSearchTool {
             .unwrap_or(self.max_results as u64) as usize;
         let max = max.clamp(1, 20);
 
-        let size_filter = args
-            .get("size")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let size_filter = args.get("size").and_then(|v| v.as_str()).unwrap_or("");
 
         let type_filter = args
             .get("image_type")

@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 use std::collections::HashMap;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use async_trait::async_trait;
 use reqwest::multipart::{Form, Part};
 

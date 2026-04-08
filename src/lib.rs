@@ -78,6 +78,7 @@ pub(crate) mod service;
 pub mod skillforge;
 pub(crate) mod skills;
 pub mod sop;
+pub mod team;
 pub mod tools;
 pub(crate) mod trust;
 pub(crate) mod tunnel;
@@ -91,8 +92,10 @@ pub mod workflows;
 pub mod bootstrap;
 pub mod bridge;
 pub mod buddy;
+pub mod cli;
 pub mod constants;
 pub mod context;
+pub mod coordinator;
 pub mod entrypoints;
 pub mod keybindings;
 pub mod output_styles;
@@ -114,11 +117,19 @@ pub mod plugins;
 pub use config::Config;
 
 // Multi-agent collaboration infrastructure re-exports
+pub use agent::coordination::{
+    BarrierManager, LockManager, LockResult, VotingManager, VotingResult,
+};
 pub use agent::registry::{AgentRegistry, AgentRegistryHandle};
 pub use agent::supervisor::{Supervisor, SupervisorHandle};
 pub use agent::task_queue::{TaskQueue, TaskQueueHandle};
-pub use agent::coordination::{Coordinator, CoordinatorHandle};
 pub use memory::blackboard::{Blackboard, BlackboardHandle};
+
+// Remote IO transport re-exports
+pub use remote::{
+    SSETransport, TransportConfig, TransportEvent, TransportResult, TransportType,
+    WebSocketTransport, build_transport_headers, get_transport_for_url, parse_url_for_transport,
+};
 
 /// Gateway management subcommands
 #[derive(Subcommand, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

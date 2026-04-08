@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 use super::traits::{Tool, ToolResult};
 use crate::config::Config;
-use crate::cron::{self, deserialize_maybe_stringified, CronJobPatch};
+use crate::cron::{self, CronJobPatch, deserialize_maybe_stringified};
 use crate::security::SecurityPolicy;
 use async_trait::async_trait;
 use serde_json::json;
@@ -364,10 +364,12 @@ mod tests {
             .await
             .unwrap();
         assert!(!denied.success);
-        assert!(denied
-            .error
-            .unwrap_or_default()
-            .contains("explicit approval"));
+        assert!(
+            denied
+                .error
+                .unwrap_or_default()
+                .contains("explicit approval")
+        );
 
         let approved = tool
             .execute(json!({
@@ -504,10 +506,12 @@ mod tests {
             .await
             .unwrap();
         assert!(!result.success);
-        assert!(result
-            .error
-            .unwrap_or_default()
-            .contains("Rate limit exceeded"));
+        assert!(
+            result
+                .error
+                .unwrap_or_default()
+                .contains("Rate limit exceeded")
+        );
         assert!(cron::get_job(&cfg, &job.id).unwrap().enabled);
     }
 

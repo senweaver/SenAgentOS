@@ -167,16 +167,14 @@ impl Tool for SetupAgentTool {
                 toml_content.push_str(&format!("model = \"{m}\"\n"));
             }
             if let Some(sp) = system_prompt {
-                toml_content.push_str(&format!(
-                    "system_prompt = \"\"\"\n{}\n\"\"\"\n",
-                    sp
-                ));
+                toml_content.push_str(&format!("system_prompt = \"\"\"\n{}\n\"\"\"\n", sp));
             }
             if let Some(t) = temperature {
                 toml_content.push_str(&format!("temperature = {t}\n"));
             }
             if !tool_groups.is_empty() {
-                let groups_str: Vec<String> = tool_groups.iter().map(|g| format!("\"{g}\"")).collect();
+                let groups_str: Vec<String> =
+                    tool_groups.iter().map(|g| format!("\"{g}\"")).collect();
                 toml_content.push_str(&format!("tool_groups = [{}]\n", groups_str.join(", ")));
             }
 

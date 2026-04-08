@@ -55,8 +55,10 @@ impl AgentSummaryService {
                 files_changed.len()
             ),
             SummaryGranularity::Standard => {
-                let tool_names: Vec<&str> = tools_used.iter().map(|t| t.tool_name.as_str()).collect();
-                let unique_tools: std::collections::HashSet<&str> = tool_names.into_iter().collect();
+                let tool_names: Vec<&str> =
+                    tools_used.iter().map(|t| t.tool_name.as_str()).collect();
+                let unique_tools: std::collections::HashSet<&str> =
+                    tool_names.into_iter().collect();
                 format!(
                     "Used {} unique tools ({} total invocations), changed {} files. Key actions: {}",
                     unique_tools.len(),
@@ -73,7 +75,10 @@ impl AgentSummaryService {
                 }
                 parts.push(format!("\nTool invocations ({}):", tools_used.len()));
                 for t in tools_used {
-                    parts.push(format!("  - {} [{}ms]: {}", t.tool_name, t.duration_ms, t.description));
+                    parts.push(format!(
+                        "  - {} [{}ms]: {}",
+                        t.tool_name, t.duration_ms, t.description
+                    ));
                 }
                 if !key_decisions.is_empty() {
                     parts.push(format!("\nKey decisions ({}):", key_decisions.len()));

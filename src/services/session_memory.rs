@@ -68,16 +68,17 @@ impl SessionMemoryService {
             return;
         }
         let now = now_ms();
-        let entry = inner.entries.entry(key.to_string()).or_insert_with(|| {
-            SessionMemoryEntry {
+        let entry = inner
+            .entries
+            .entry(key.to_string())
+            .or_insert_with(|| SessionMemoryEntry {
                 key: key.to_string(),
                 value: String::new(),
                 category,
                 created_at_ms: now,
                 updated_at_ms: now,
                 source_turn: None,
-            }
-        });
+            });
         entry.value = value.to_string();
         entry.updated_at_ms = now;
         entry.category = category;
@@ -115,7 +116,12 @@ impl SessionMemoryService {
         let mut parts = Vec::new();
         let mut total_len = 0;
         for entry in inner.entries.values() {
-            let line = format!("- [{}] {}: {}", entry.category_label(), entry.key, entry.value);
+            let line = format!(
+                "- [{}] {}: {}",
+                entry.category_label(),
+                entry.key,
+                entry.value
+            );
             total_len += line.len();
             if total_len > max_tokens_estimate * 4 {
                 break;
@@ -125,7 +131,10 @@ impl SessionMemoryService {
         if parts.is_empty() {
             return String::new();
         }
-        format!("<session_memories>\n{}\n</session_memories>", parts.join("\n"))
+        format!(
+            "<session_memories>\n{}\n</session_memories>",
+            parts.join("\n")
+        )
     }
 
     /// Clear all session memories.

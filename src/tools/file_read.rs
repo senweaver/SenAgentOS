@@ -275,15 +275,19 @@ mod tests {
         assert!(schema["properties"]["path"].is_object());
         assert!(schema["properties"]["offset"].is_object());
         assert!(schema["properties"]["limit"].is_object());
-        assert!(schema["required"]
-            .as_array()
-            .unwrap()
-            .contains(&json!("path")));
+        assert!(
+            schema["required"]
+                .as_array()
+                .unwrap()
+                .contains(&json!("path"))
+        );
         // offset and limit are optional
-        assert!(!schema["required"]
-            .as_array()
-            .unwrap()
-            .contains(&json!("offset")));
+        assert!(
+            !schema["required"]
+                .as_array()
+                .unwrap()
+                .contains(&json!("offset"))
+        );
     }
 
     #[tokio::test]
@@ -361,11 +365,13 @@ mod tests {
         let result = tool.execute(json!({"path": "test.txt"})).await.unwrap();
 
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("Rate limit exceeded"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("Rate limit exceeded")
+        );
 
         let _ = tokio::fs::remove_dir_all(&dir).await;
     }
@@ -455,11 +461,13 @@ mod tests {
         let result = tool.execute(json!({"path": "escape.txt"})).await.unwrap();
 
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("escapes workspace"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("escapes workspace")
+        );
 
         let _ = tokio::fs::remove_dir_all(&root).await;
     }
@@ -600,9 +608,11 @@ mod tests {
             .await
             .unwrap();
         assert!(result.success);
-        assert!(result
-            .output
-            .contains("[No lines in range, file has 2 lines]"));
+        assert!(
+            result
+                .output
+                .contains("[No lines in range, file has 2 lines]")
+        );
 
         let _ = tokio::fs::remove_dir_all(&dir).await;
     }

@@ -170,7 +170,12 @@ impl McpManager {
     }
 
     /// Update a server's status.
-    pub async fn set_server_status(&self, name: &str, status: McpServerStatus, error: Option<String>) {
+    pub async fn set_server_status(
+        &self,
+        name: &str,
+        status: McpServerStatus,
+        error: Option<String>,
+    ) {
         let mut inner = self.inner.write().await;
         if let Some(server) = inner.servers.get_mut(name) {
             server.status = status;

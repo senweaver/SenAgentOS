@@ -9,7 +9,9 @@ use super::registry::{CommandContext, CommandResult};
 
 pub async fn handle(ctx: CommandContext) -> CommandResult {
     if ctx.args.is_empty() {
-        return CommandResult::ok("Available themes: default, concise, detailed, formal, code-only\nUsage: /theme <name>");
+        return CommandResult::ok(
+            "Available themes: default, concise, detailed, formal, code-only\nUsage: /theme <name>",
+        );
     }
     let theme = &ctx.args[0];
     CommandResult::ok(format!("Theme set to: {theme}"))

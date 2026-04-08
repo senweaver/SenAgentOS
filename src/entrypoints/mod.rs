@@ -15,9 +15,11 @@ pub mod init;
 pub mod mcp_server;
 pub mod sdk;
 pub mod sdk_types;
+pub mod structured_io;
 
 pub use cli::CliEntrypoint;
 pub use init::InitEntrypoint;
 pub use mcp_server::McpServerEntrypoint;
 pub use sdk::SdkEntrypoint;
-pub use sdk_types::{SdkMessage, SdkStatus, SdkConfig};
+pub use sdk_types::{SdkConfig, SdkMessage, SdkStatus};
+pub use structured_io::{RemoteIO, SdkSession, SdkSessionBuilder, StructuredIO};

@@ -2,12 +2,12 @@
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
 use crate::cli_input::Input;
-#[cfg(feature = "channel-nostr")]
-use crate::config::schema::{default_nostr_relays, NostrConfig};
 use crate::config::schema::{
     DingTalkConfig, IrcConfig, LarkReceiveMode, LinqConfig, NextcloudTalkConfig, QQConfig,
     SignalConfig, StreamMode, WhatsAppChatPolicy, WhatsAppConfig, WhatsAppWebMode,
 };
+#[cfg(feature = "channel-nostr")]
+use crate::config::schema::{NostrConfig, default_nostr_relays};
 use crate::config::{
     AutonomyConfig, BrowserConfig, ChannelsConfig, ComposioConfig, Config, DiscordConfig,
     HeartbeatConfig, IMessageConfig, LarkConfig, MatrixConfig, MemoryConfig, ObservabilityConfig,
@@ -22,7 +22,7 @@ use crate::providers::{
     is_moonshot_alias, is_qianfan_alias, is_qwen_alias, is_qwen_oauth_alias, is_zai_alias,
     is_zai_cn_alias,
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use console::style;
 use dialoguer::{Confirm, Select};
 use serde::{Deserialize, Serialize};
@@ -60,18 +60,14 @@ pub struct ProjectContext {
 // ── Banner ───────────────────────────────────────────────────────
 
 const BANNER: &str = r"
-    ⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡
-
-    ███████╗███████╗██████╗  ██████╗  ██████╗██╗      █████╗ ██╗    ██╗
-    ╚══███╔╝██╔════╝██╔══██╗██╔═══██╗██╔════╝██║     ██╔══██╗██║    ██║
-      ███╔╝ █████╗  ██████╔╝██║   ██║██║     ██║     ███████║██║ █╗ ██║
-     ███╔╝  ██╔══╝  ██╔══██╗██║   ██║██║     ██║     ██╔══██║██║███╗██║
-    ███████╗███████╗██║  ██║╚██████╔╝╚██████╗███████╗██║  ██║╚███╔███╔╝
-    ╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝
-
-    Zero overhead. Zero compromise. 100% Rust. 100% Agnostic.
-
-    ⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡
+    ╔════════════════════════════════════════════════════════════════╗
+    ║                                                                ║
+    ║                            SENAGENTOS                          ║
+    ║                                                                ║
+    ║              SenAgentOS — AI Agent Operating System            ║
+    ║           Rust-native, extensible, sovereign.                  ║
+    ║                                                                ║
+    ╚════════════════════════════════════════════════════════════════╝
 ";
 
 const LIVE_MODEL_MAX_OPTIONS: usize = 120;
@@ -233,6 +229,7 @@ pub async fn run_wizard(force: bool) -> Result<Config> {
         plan_mode: crate::agent::plan_mode::PlanModeConfig::default(),
         auto_title: crate::agent::auto_title::AutoTitleConfig::default(),
         suggestions: crate::agent::suggestions::SuggestionsConfig::default(),
+        middleware: crate::agent::middleware::MiddlewareConfig::default(),
         tool_groups: crate::tools::tool_groups::ToolGroupsConfig::default(),
         user_profile: crate::agent::user_profile::UserProfileConfig::default(),
         self_eval: crate::agent::self_eval::SelfEvalConfig::default(),
@@ -241,9 +238,11 @@ pub async fn run_wizard(force: bool) -> Result<Config> {
         self_reflection: crate::agent::self_reflection::SelfReflectionConfig::default(),
         prompt_optimizer: crate::agent::prompt_optimizer::PromptOptimizerConfig::default(),
         skill_evolution: crate::agent::skill_evolution::SkillEvolutionConfig::default(),
+        clarification: crate::agent::clarify::ClarificationConfig::default(),
         reinforcement: crate::agent::reinforcement::ReinforcementConfig::default(),
         rbac: crate::security::rbac::RbacConfig::default(),
-        tool_output_compressor: crate::agent::tool_output_compressor::ToolOutputCompressorConfig::default(),
+        tool_output_compressor:
+            crate::agent::tool_output_compressor::ToolOutputCompressorConfig::default(),
         token_budget: crate::agent::token_budget::TokenBudgetConfig::default(),
     };
 
@@ -693,6 +692,7 @@ async fn run_quick_setup_with_home(
         plan_mode: crate::agent::plan_mode::PlanModeConfig::default(),
         auto_title: crate::agent::auto_title::AutoTitleConfig::default(),
         suggestions: crate::agent::suggestions::SuggestionsConfig::default(),
+        middleware: crate::agent::middleware::MiddlewareConfig::default(),
         tool_groups: crate::tools::tool_groups::ToolGroupsConfig::default(),
         user_profile: crate::agent::user_profile::UserProfileConfig::default(),
         self_eval: crate::agent::self_eval::SelfEvalConfig::default(),
@@ -701,9 +701,11 @@ async fn run_quick_setup_with_home(
         self_reflection: crate::agent::self_reflection::SelfReflectionConfig::default(),
         prompt_optimizer: crate::agent::prompt_optimizer::PromptOptimizerConfig::default(),
         skill_evolution: crate::agent::skill_evolution::SkillEvolutionConfig::default(),
+        clarification: crate::agent::clarify::ClarificationConfig::default(),
         reinforcement: crate::agent::reinforcement::ReinforcementConfig::default(),
         rbac: crate::security::rbac::RbacConfig::default(),
-        tool_output_compressor: crate::agent::tool_output_compressor::ToolOutputCompressorConfig::default(),
+        tool_output_compressor:
+            crate::agent::tool_output_compressor::ToolOutputCompressorConfig::default(),
         token_budget: crate::agent::token_budget::TokenBudgetConfig::default(),
     };
 
@@ -2466,7 +2468,9 @@ async fn setup_provider(workspace_dir: &Path) -> Result<(String, String, String,
             style("Custom Provider Setup").white().bold(),
             style("— any OpenAI-compatible API").dim()
         );
-        print_bullet("SenAgentOS works with ANY API that speaks the OpenAI chat completions format.");
+        print_bullet(
+            "SenAgentOS works with ANY API that speaks the OpenAI chat completions format.",
+        );
         print_bullet("Examples: LiteLLM, LocalAI, vLLM, text-generation-webui, LM Studio, etc.");
         println!();
 
@@ -4145,7 +4149,9 @@ fn setup_channels() -> Result<ChannelsConfig> {
                     continue;
                 }
 
-                print_bullet("SenAgentOS reads your iMessage database and replies via AppleScript.");
+                print_bullet(
+                    "SenAgentOS reads your iMessage database and replies via AppleScript.",
+                );
                 print_bullet(
                     "You need to grant Full Disk Access to your terminal in System Settings.",
                 );
@@ -5222,11 +5228,7 @@ fn setup_channels() -> Result<ChannelsConfig> {
                         .with_prompt("  Verification Token (optional, for Webhook mode)")
                         .allow_empty(true)
                         .interact_text()?;
-                    if token.is_empty() {
-                        None
-                    } else {
-                        Some(token)
-                    }
+                    if token.is_empty() { None } else { Some(token) }
                 } else {
                     None
                 };
@@ -6314,10 +6316,7 @@ mod tests {
         let workspace_dir = workspace_root.join("workspace");
         let expected_config_path = workspace_root.join(".senagent").join("config.toml");
 
-        let _workspace_env = EnvVarGuard::set(
-            "SENAGENTOS_WORKSPACE",
-            workspace_dir.as_os_str(),
-        );
+        let _workspace_env = EnvVarGuard::set("SENAGENTOS_WORKSPACE", workspace_dir.as_os_str());
         let _config_env = EnvVarGuard::unset("SENAGENTOS_CONFIG_DIR");
 
         let config = Box::pin(run_quick_setup_with_home(
@@ -6373,12 +6372,14 @@ mod tests {
         let service_config = Path::new("/opt/homebrew/var/senagent/config.toml");
         let service_workspace = Path::new("/opt/homebrew/var/senagent/workspace");
 
-        assert!(quick_setup_homebrew_service_note(
-            service_config,
-            service_workspace,
-            Path::new("/opt/homebrew/bin/senagent"),
-        )
-        .is_none());
+        assert!(
+            quick_setup_homebrew_service_note(
+                service_config,
+                service_workspace,
+                Path::new("/opt/homebrew/bin/senagent"),
+            )
+            .is_none()
+        );
     }
 
     // ── scaffold_workspace: basic file creation ─────────────────
@@ -7491,9 +7492,10 @@ mod tests {
         };
 
         let err = run_models_refresh(&config, None, true).await.unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("does not support live model discovery"));
+        assert!(
+            err.to_string()
+                .contains("does not support live model discovery")
+        );
     }
 
     // ── provider_env_var ────────────────────────────────────────

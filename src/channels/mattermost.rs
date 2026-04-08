@@ -2,7 +2,7 @@
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
 use super::traits::{Channel, ChannelMessage, SendMessage};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use async_trait::async_trait;
 use parking_lot::Mutex;
 use std::sync::Arc;

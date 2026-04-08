@@ -62,13 +62,34 @@ pub enum MessageSender {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum MessageContent {
-    Text { text: String },
-    ToolUse { tool_name: String, input: serde_json::Value },
-    ToolResult { tool_use_id: String, output: String, is_error: bool },
-    Attachment { filename: String, media_type: String, data: Vec<u8> },
-    Command { name: String, args: Option<String> },
-    PermissionRequest { tool_name: String, description: String },
-    PermissionResponse { approved: bool },
+    Text {
+        text: String,
+    },
+    ToolUse {
+        tool_name: String,
+        input: serde_json::Value,
+    },
+    ToolResult {
+        tool_use_id: String,
+        output: String,
+        is_error: bool,
+    },
+    Attachment {
+        filename: String,
+        media_type: String,
+        data: Vec<u8>,
+    },
+    Command {
+        name: String,
+        args: Option<String>,
+    },
+    PermissionRequest {
+        tool_name: String,
+        description: String,
+    },
+    PermissionResponse {
+        approved: bool,
+    },
 }
 
 /// Inbound attachment from a remote client.

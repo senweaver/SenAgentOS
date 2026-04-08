@@ -12,7 +12,7 @@ use crate::peripherals::Peripheral;
 use crate::tools::traits::{Tool, ToolResult};
 use async_trait::async_trait;
 use portable_atomic::{AtomicU64, Ordering};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::Mutex;
@@ -64,7 +64,8 @@ async fn send_request(port: &mut SerialStream, cmd: &str, args: Value) -> anyhow
     }
     if bytes_read >= MAX_RESPONSE_SIZE {
         tracing::warn!(
-            "Serial response truncated at {} bytes (limit)", MAX_RESPONSE_SIZE
+            "Serial response truncated at {} bytes (limit)",
+            MAX_RESPONSE_SIZE
         );
     }
     let line_str = String::from_utf8_lossy(&buf);

@@ -2,10 +2,10 @@
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
 use super::traits::{Tool, ToolResult};
-use crate::security::{policy::ToolOperation, SecurityPolicy};
+use crate::security::{SecurityPolicy, policy::ToolOperation};
 use async_trait::async_trait;
 use reqwest::Client;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -509,7 +509,7 @@ impl Tool for JiraTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing required parameter: action".into()),
-                })
+                });
             }
         };
 
@@ -563,7 +563,7 @@ impl Tool for JiraTool {
                             success: false,
                             output: String::new(),
                             error: Some("get_ticket requires issue_key parameter".into()),
-                        })
+                        });
                     }
                 };
                 let level = match args.get("level_of_details").and_then(|v| v.as_str()) {
@@ -582,7 +582,7 @@ impl Tool for JiraTool {
                             success: false,
                             output: String::new(),
                             error: Some("search_tickets requires jql parameter".into()),
-                        })
+                        });
                     }
                 };
                 let max_results = args
@@ -601,7 +601,7 @@ impl Tool for JiraTool {
                             success: false,
                             output: String::new(),
                             error: Some("comment_ticket requires issue_key parameter".into()),
-                        })
+                        });
                     }
                 };
                 let comment = match args.get("comment").and_then(|v| v.as_str()) {
@@ -613,7 +613,7 @@ impl Tool for JiraTool {
                             error: Some(
                                 "comment_ticket requires a non-empty comment parameter".into(),
                             ),
-                        })
+                        });
                     }
                 };
                 self.comment_ticket(issue_key, comment).await

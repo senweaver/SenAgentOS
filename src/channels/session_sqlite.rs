@@ -12,7 +12,7 @@ use crate::providers::traits::ChatMessage;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Duration, Utc};
 use parking_lot::Mutex;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::path::{Path, PathBuf};
 
 /// SQLite-backed session store with FTS5 and WAL mode.

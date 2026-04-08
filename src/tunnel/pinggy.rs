@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
-use super::{kill_shared, new_shared_process, SharedProcess, Tunnel, TunnelProcess};
-use anyhow::{bail, Result};
+use super::{SharedProcess, Tunnel, TunnelProcess, kill_shared, new_shared_process};
+use anyhow::{Result, bail};
 use tokio::io::AsyncBufReadExt;
 use tokio::process::Command;
 
@@ -137,7 +137,9 @@ impl Tunnel for PinggyTunnel {
         if public_url.is_empty() {
             child.kill().await.ok();
             child.wait().await.ok();
-            bail!("pinggy did not produce a public URL within 15s. Is SSH available and the token valid?");
+            bail!(
+                "pinggy did not produce a public URL within 15s. Is SSH available and the token valid?"
+            );
         }
 
         let mut guard = self.proc.lock().await;

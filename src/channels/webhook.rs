@@ -2,7 +2,7 @@
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
 use super::traits::{Channel, ChannelMessage, SendMessage};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
@@ -148,11 +148,11 @@ impl Channel for WebhookChannel {
 
     async fn listen(&self, tx: tokio::sync::mpsc::Sender<ChannelMessage>) -> Result<()> {
         use axum::{
+            Router,
             body::Bytes,
             extract::State,
             http::{HeaderMap, StatusCode},
             routing::post,
-            Router,
         };
         use portable_atomic::{AtomicU64, Ordering};
         use std::sync::Arc;

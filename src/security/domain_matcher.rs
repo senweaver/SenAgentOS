@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::collections::BTreeSet;
 
 const BANKING_DOMAINS: &[&str] = &[

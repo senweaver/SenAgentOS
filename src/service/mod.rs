@@ -2,7 +2,7 @@
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
 use crate::config::Config;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -820,7 +820,9 @@ fn check_senagent_user() -> Result<()> {
                     bail!(
                         "User 'senagent' exists but has unexpected UID {} (expected system UID < 1000).\n\
                          Recreate with: sudo {} && sudo {}",
-                        uid, del_cmd, add_cmd
+                        uid,
+                        del_cmd,
+                        add_cmd
                     );
                 }
 

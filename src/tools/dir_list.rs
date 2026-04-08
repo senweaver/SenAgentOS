@@ -69,10 +69,7 @@ impl Tool for DirListTool {
             .and_then(|v| v.as_str())
             .ok_or_else(|| anyhow::anyhow!("Missing 'path' parameter"))?;
 
-        let depth = args
-            .get("depth")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(1) as usize;
+        let depth = args.get("depth").and_then(|v| v.as_u64()).unwrap_or(1) as usize;
         let depth = depth.min(MAX_DEPTH);
 
         let show_hidden = args
@@ -144,12 +141,7 @@ impl Tool for DirListTool {
         )
         .await;
 
-        writeln!(
-            output,
-            "\n{} directories, {} files",
-            dir_count, file_count
-        )
-        .ok();
+        writeln!(output, "\n{} directories, {} files", dir_count, file_count).ok();
 
         if entry_count >= MAX_ENTRIES as u32 {
             writeln!(
@@ -221,11 +213,7 @@ async fn list_dir_recursive(
             .unwrap_or(false);
 
         let size = if !is_dir {
-            entry
-                .metadata()
-                .await
-                .map(|m| m.len())
-                .unwrap_or(0)
+            entry.metadata().await.map(|m| m.len()).unwrap_or(0)
         } else {
             0
         };
@@ -233,12 +221,10 @@ async fn list_dir_recursive(
         entries.push((name, is_dir, size));
     }
 
-    entries.sort_by(|a, b| {
-        match (a.1, b.1) {
-            (true, false) => std::cmp::Ordering::Less,
-            (false, true) => std::cmp::Ordering::Greater,
-            _ => a.0.to_lowercase().cmp(&b.0.to_lowercase()),
-        }
+    entries.sort_by(|a, b| match (a.1, b.1) {
+        (true, false) => std::cmp::Ordering::Less,
+        (false, true) => std::cmp::Ordering::Greater,
+        _ => a.0.to_lowercase().cmp(&b.0.to_lowercase()),
     });
 
     let total = entries.len();

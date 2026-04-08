@@ -12,7 +12,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 use tokio::sync::watch;
 
-use super::types::{Task, TaskId, TaskType, generate_task_id, TaskState, TaskHandle};
+use super::types::{Task, TaskHandle, TaskId, TaskState, TaskType, generate_task_id};
 
 pub struct LocalShellSpawnInput {
     pub command: String,

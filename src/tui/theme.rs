@@ -24,7 +24,10 @@ pub fn title() -> Style {
 }
 
 pub fn selected() -> Style {
-    Style::default().fg(BG).bg(ACCENT).add_modifier(Modifier::BOLD)
+    Style::default()
+        .fg(BG)
+        .bg(ACCENT)
+        .add_modifier(Modifier::BOLD)
 }
 
 pub fn dim() -> Style {
@@ -52,7 +55,9 @@ pub fn info_style() -> Style {
 }
 
 pub fn tab_active() -> Style {
-    Style::default().fg(ACCENT).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+    Style::default()
+        .fg(ACCENT)
+        .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
 }
 
 pub fn tab_inactive() -> Style {

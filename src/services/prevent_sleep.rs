@@ -6,8 +6,8 @@
 // Prevents the OS from sleeping while the agent is actively processing
 // long-running tasks.
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Guard that prevents system sleep while held.
 /// Drop the guard to allow sleep again.
@@ -31,7 +31,9 @@ impl SleepInhibitor {
         #[cfg(target_os = "windows")]
         {
             // On Windows, SetThreadExecutionState is used.
-            tracing::debug!("Windows: would call SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)");
+            tracing::debug!(
+                "Windows: would call SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)"
+            );
         }
         #[cfg(target_os = "linux")]
         {

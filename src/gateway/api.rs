@@ -8,10 +8,11 @@
 use super::AppState;
 use axum::{
     extract::{Path, Query, State},
-    http::{header, HeaderMap, StatusCode},
+    http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Json},
 };
 use serde::Deserialize;
+use std::sync::Arc;
 
 const MASKED_SECRET: &str = "***MASKED***";
 
@@ -348,7 +349,11 @@ pub async fn handle_api_channels_put(
     }
 
     let Some(channels) = body.get("channels").and_then(|v| v.as_array()) else {
-        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": "missing channels array"}))).into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "missing channels array"})),
+        )
+            .into_response();
     };
 
     let mut config = state.config.lock().clone();
@@ -365,52 +370,73 @@ pub async fn handle_api_channels_put(
 
         match name {
             "telegram" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::TelegramConfig>(cfg.clone()) {
+                if let Ok(parsed) =
+                    serde_json::from_value::<crate::config::schema::TelegramConfig>(cfg.clone())
+                {
                     config.channels_config.telegram = Some(parsed);
                 }
             }
             "discord" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::DiscordConfig>(cfg.clone()) {
+                if let Ok(parsed) =
+                    serde_json::from_value::<crate::config::schema::DiscordConfig>(cfg.clone())
+                {
                     config.channels_config.discord = Some(parsed);
                 }
             }
             "slack" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::SlackConfig>(cfg.clone()) {
+                if let Ok(parsed) =
+                    serde_json::from_value::<crate::config::schema::SlackConfig>(cfg.clone())
+                {
                     config.channels_config.slack = Some(parsed);
                 }
             }
             "mattermost" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::MattermostConfig>(cfg.clone()) {
+                if let Ok(parsed) =
+                    serde_json::from_value::<crate::config::schema::MattermostConfig>(cfg.clone())
+                {
                     config.channels_config.mattermost = Some(parsed);
                 }
             }
             "webhook" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::WebhookConfig>(cfg.clone()) {
+                if let Ok(parsed) =
+                    serde_json::from_value::<crate::config::schema::WebhookConfig>(cfg.clone())
+                {
                     config.channels_config.webhook = Some(parsed);
                 }
             }
             "matrix" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::MatrixConfig>(cfg.clone()) {
+                if let Ok(parsed) =
+                    serde_json::from_value::<crate::config::schema::MatrixConfig>(cfg.clone())
+                {
                     config.channels_config.matrix = Some(parsed);
                 }
             }
             "whatsapp" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::WhatsAppConfig>(cfg.clone()) {
+                if let Ok(parsed) =
+                    serde_json::from_value::<crate::config::schema::WhatsAppConfig>(cfg.clone())
+                {
                     config.channels_config.whatsapp = Some(parsed);
                 }
             }
             "linq" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::LinqConfig>(cfg.clone()) {
+                if let Ok(parsed) =
+                    serde_json::from_value::<crate::config::schema::LinqConfig>(cfg.clone())
+                {
                     config.channels_config.linq = Some(parsed);
                 }
             }
             "nextcloud_talk" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::NextcloudTalkConfig>(cfg.clone()) {
+                if let Ok(parsed) = serde_json::from_value::<
+                    crate::config::schema::NextcloudTalkConfig,
+                >(cfg.clone())
+                {
                     config.channels_config.nextcloud_talk = Some(parsed);
                 }
             }
             "wati" => {
-                if let Ok(parsed) = serde_json::from_value::<crate::config::schema::WatiConfig>(cfg.clone()) {
+                if let Ok(parsed) =
+                    serde_json::from_value::<crate::config::schema::WatiConfig>(cfg.clone())
+                {
                     config.channels_config.wati = Some(parsed);
                 }
             }
@@ -419,11 +445,19 @@ pub async fn handle_api_channels_put(
     }
 
     if let Err(e) = config.validate() {
-        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": format!("Invalid config: {e}")}))).into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": format!("Invalid config: {e}")})),
+        )
+            .into_response();
     }
 
     if let Err(e) = config.save().await {
-        return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": format!("Failed to save: {e}")}))).into_response();
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": format!("Failed to save: {e}")})),
+        )
+            .into_response();
     }
 
     *state.config.lock() = config;
@@ -552,10 +586,7 @@ pub async fn handle_api_skills_get(
         .into_iter()
         .map(|s| {
             let enabled = !disabled.contains(&s.name);
-            let path_str = s
-                .location
-                .as_ref()
-                .map(|p| p.display().to_string());
+            let path_str = s.location.as_ref().map(|p| p.display().to_string());
             serde_json::json!({
                 "name": s.name,
                 "description": s.description,
@@ -1877,7 +1908,13 @@ pub async fn handle_claude_code_hook(
 
 // ── Suggestions API ─────────────────────────────────────────────
 
-/// POST /api/suggestions — generate context-aware suggestions
+/// POST /api/suggestions — generate context-aware suggestions.
+///
+/// Supports two modes:
+/// - **Legacy (field-based)**: `user_message` + `assistant_response` → rule-based suggestions.
+/// - **LLM-driven**: `messages` (full history) → model-generated suggestions ( DeerFlow-style).
+///
+/// If `llm_enabled` is true in config and `messages` are provided, LLM mode takes priority.
 pub async fn handle_api_suggestions(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -1894,12 +1931,32 @@ pub async fn handle_api_suggestions(
         .map(|t| t.name.clone())
         .collect();
 
-    let suggestions = crate::agent::suggestions::generate_rule_based_suggestions(
-        &body.user_message,
-        &body.assistant_response,
-        &tool_names,
-        &config.suggestions,
-    );
+    let suggestions = match &body {
+        SuggestionsBody::Messages { messages } if config.suggestions.llm_enabled && !messages.is_empty() => {
+            // LLM-driven suggestions from full conversation history (DeerFlow-style)
+            let provider = Arc::clone(&state.provider);
+            let model = state.model.clone();
+            let suggestions_config = config.suggestions.clone();
+
+            crate::agent::suggestions::generate_llm_suggestions(
+                provider.as_ref(),
+                &model,
+                messages,
+                &suggestions_config,
+            )
+            .await
+        }
+        _ => {
+            // Rule-based fallback (uses last turn)
+            let (user_message, assistant_response) = body.last_turn();
+            crate::agent::suggestions::generate_rule_based_suggestions(
+                user_message,
+                assistant_response,
+                &tool_names,
+                &config.suggestions,
+            )
+        }
+    };
 
     Json(serde_json::json!({
         "suggestions": suggestions,
@@ -1909,9 +1966,58 @@ pub async fn handle_api_suggestions(
 }
 
 #[derive(Deserialize)]
-pub struct SuggestionsBody {
-    pub user_message: String,
-    pub assistant_response: String,
+#[serde(untagged)]
+pub enum SuggestionsBody {
+    /// Full history mode — array of conversation messages (LLM-driven suggestions).
+    Messages {
+        /// Conversation history for LLM-driven suggestions.
+        messages: Vec<crate::agent::suggestions::ConversationMessage>,
+    },
+    /// Legacy mode — last user/assistant turn (rule-based suggestions).
+    LastTurn {
+        /// The last user message.
+        user_message: String,
+        /// The last assistant response.
+        assistant_response: String,
+    },
+    /// Combined mode (used when frontend sends both).
+    Full {
+        /// Conversation history for LLM-driven suggestions.
+        #[serde(default)]
+        messages: Vec<crate::agent::suggestions::ConversationMessage>,
+        /// The last user message (used in rule-based fallback).
+        user_message: String,
+        /// The last assistant response (used in rule-based fallback).
+        assistant_response: String,
+    },
+}
+
+impl Default for SuggestionsBody {
+    fn default() -> Self {
+        Self::LastTurn { user_message: String::new(), assistant_response: String::new() }
+    }
+}
+
+impl SuggestionsBody {
+    /// Extract the last turn (user message + assistant response) for rule-based suggestions.
+    fn last_turn(&self) -> (&str, &str) {
+        match self {
+            SuggestionsBody::LastTurn { user_message, assistant_response } => {
+                (user_message.as_str(), assistant_response.as_str())
+            }
+            SuggestionsBody::Full { user_message, assistant_response, .. } => {
+                (user_message.as_str(), assistant_response.as_str())
+            }
+            SuggestionsBody::Messages { messages } => {
+                // Fall back to the last user message only
+                let last_user = messages.iter().rev().find(|m| m.role == "user");
+                (
+                    last_user.map(|m| m.content.as_str()).unwrap_or_default(),
+                    "",
+                )
+            }
+        }
+    }
 }
 
 // ── Workflows API ───────────────────────────────────────────────
@@ -2091,11 +2197,7 @@ pub async fn handle_api_rbac_users_create(
 
     match engine.create_user(body) {
         Ok(()) => Json(serde_json::json!({"status": "ok"})).into_response(),
-        Err(e) => (
-            StatusCode::CONFLICT,
-            Json(serde_json::json!({"error": e})),
-        )
-            .into_response(),
+        Err(e) => (StatusCode::CONFLICT, Json(serde_json::json!({"error": e}))).into_response(),
     }
 }
 
@@ -2121,11 +2223,7 @@ pub async fn handle_api_rbac_user_update(
     body.user_id = user_id;
     match engine.update_user(body) {
         Ok(()) => Json(serde_json::json!({"status": "ok"})).into_response(),
-        Err(e) => (
-            StatusCode::NOT_FOUND,
-            Json(serde_json::json!({"error": e})),
-        )
-            .into_response(),
+        Err(e) => (StatusCode::NOT_FOUND, Json(serde_json::json!({"error": e}))).into_response(),
     }
 }
 
@@ -2149,11 +2247,7 @@ pub async fn handle_api_rbac_user_delete(
 
     match engine.delete_user(&user_id) {
         Ok(()) => Json(serde_json::json!({"status": "ok"})).into_response(),
-        Err(e) => (
-            StatusCode::NOT_FOUND,
-            Json(serde_json::json!({"error": e})),
-        )
-            .into_response(),
+        Err(e) => (StatusCode::NOT_FOUND, Json(serde_json::json!({"error": e}))).into_response(),
     }
 }
 
@@ -2310,8 +2404,7 @@ pub async fn handle_api_reinforcement(
 
     let config = state.config.lock().clone();
 
-    let engine =
-        crate::agent::reinforcement::ReinforcementEngine::new(&config.reinforcement);
+    let engine = crate::agent::reinforcement::ReinforcementEngine::new(&config.reinforcement);
     let adjustment = engine.get_policy_adjustment();
     let baselines = engine.baselines();
 
@@ -2534,7 +2627,7 @@ pub async fn handle_api_multi_agent_status(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gateway::{nodes, AppState, GatewayRateLimiter, IdempotencyStore};
+    use crate::gateway::{AppState, GatewayRateLimiter, IdempotencyStore, nodes};
     use crate::memory::{Memory, MemoryCategory, MemoryEntry};
     use crate::providers::Provider;
     use crate::security::pairing::PairingGuard;
@@ -3064,14 +3157,18 @@ mod tests {
             Some("route-embed-key-1")
         );
         assert_eq!(hydrated.embedding_routes[2].api_key, None);
-        assert!(hydrated
-            .model_routes
-            .iter()
-            .all(|route| route.api_key.as_deref() != Some(MASKED_SECRET)));
-        assert!(hydrated
-            .embedding_routes
-            .iter()
-            .all(|route| route.api_key.as_deref() != Some(MASKED_SECRET)));
+        assert!(
+            hydrated
+                .model_routes
+                .iter()
+                .all(|route| route.api_key.as_deref() != Some(MASKED_SECRET))
+        );
+        assert!(
+            hydrated
+                .embedding_routes
+                .iter()
+                .all(|route| route.api_key.as_deref() != Some(MASKED_SECRET))
+        );
     }
 
     #[tokio::test]
@@ -3193,10 +3290,12 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         let json = response_json(response).await;
-        assert!(json["error"]
-            .as_str()
-            .unwrap_or_default()
-            .contains("delivery.to is required"));
+        assert!(
+            json["error"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("delivery.to is required")
+        );
 
         let config = state.config.lock().clone();
         assert!(crate::cron::list_jobs(&config).unwrap().is_empty());
@@ -3235,10 +3334,12 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         let json = response_json(response).await;
-        assert!(json["error"]
-            .as_str()
-            .unwrap_or_default()
-            .contains("unsupported delivery channel"));
+        assert!(
+            json["error"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("unsupported delivery channel")
+        );
 
         let config = state.config.lock().clone();
         assert!(crate::cron::list_jobs(&config).unwrap().is_empty());

@@ -36,14 +36,14 @@
     dead_code
 )]
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use dialoguer::Password;
 use serde::{Deserialize, Serialize};
 use std::io::{IsTerminal, Write};
 use std::path::PathBuf;
 use tracing::{info, warn};
-use tracing_subscriber::{fmt, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt};
 
 /// Load `.env` files if present — searches up from the current working directory
 /// and the binary's directory. Failures are silent (the `.env` is optional).
@@ -55,7 +55,9 @@ fn load_env() {
             .filter(|p| p.is_absolute())
             .map(|p| p.join(".env")),
         std::env::current_dir().ok().map(|p| p.join(".env")),
-        std::env::current_exe().ok().map(|p| p.parent().unwrap().join(".env")),
+        std::env::current_exe()
+            .ok()
+            .map(|p| p.parent().unwrap().join(".env")),
     ]
     .into_iter()
     .flatten()
@@ -1139,8 +1141,12 @@ async fn main() -> Result<()> {
                         }
                         Ok(None) => {
                             if config.gateway.require_pairing {
-                                println!("🔐 Gateway pairing is enabled, but no active pairing code available.");
-                                println!("   The gateway may already be paired, or the code has been used.");
+                                println!(
+                                    "🔐 Gateway pairing is enabled, but no active pairing code available."
+                                );
+                                println!(
+                                    "   The gateway may already be paired, or the code has been used."
+                                );
                                 println!("   Restart the gateway to generate a new pairing code.");
                             } else {
                                 println!("⚠️  Gateway pairing is disabled in config.");

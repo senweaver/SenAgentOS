@@ -5,7 +5,7 @@
 // InProcessTeammateTask — runs a teammate agent in the same process.
 // Mirrors claude-code-typescript-src`tasks/InProcessTeammateTask/`.
 
-use super::types::{Task, TaskId, TaskState, TaskType, TaskHandle, generate_task_id};
+use super::types::{Task, TaskHandle, TaskId, TaskState, TaskType, generate_task_id};
 use tokio::sync::watch;
 
 pub struct TeammateSpawnInput {

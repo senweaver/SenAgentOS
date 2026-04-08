@@ -63,7 +63,11 @@ pub enum VoiceState {
 pub fn is_voice_available() -> bool {
     // Voice requires audio input capabilities.
     // On headless/server environments this is typically unavailable.
-    cfg!(any(target_os = "macos", target_os = "windows", target_os = "linux"))
+    cfg!(any(
+        target_os = "macos",
+        target_os = "windows",
+        target_os = "linux"
+    ))
 }
 
 /// Format key terms for the STT engine hint.

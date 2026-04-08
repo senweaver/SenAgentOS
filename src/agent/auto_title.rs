@@ -74,7 +74,10 @@ pub async fn generate_title(
         )
     };
 
-    let messages = vec![ChatMessage::system(TITLE_PROMPT), ChatMessage::user(&context)];
+    let messages = vec![
+        ChatMessage::system(TITLE_PROMPT),
+        ChatMessage::user(&context),
+    ];
 
     let request = ChatRequest {
         messages: &messages,

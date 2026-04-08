@@ -62,10 +62,7 @@ pub fn generate_bridge_token(
 }
 
 /// Verify a bridge token and return the claims.
-pub fn verify_bridge_token(
-    token: &str,
-    secret: &[u8],
-) -> Result<BridgeClaims, BridgeTokenError> {
+pub fn verify_bridge_token(token: &str, secret: &[u8]) -> Result<BridgeClaims, BridgeTokenError> {
     use hmac::{Hmac, Mac};
     use sha2::Sha256;
 

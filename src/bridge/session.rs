@@ -46,10 +46,7 @@ impl BridgeSessionManager {
         let mut inner = self.inner.write().await;
 
         if inner.sessions.len() >= inner.max_sessions as usize {
-            anyhow::bail!(
-                "Maximum sessions ({}) reached",
-                inner.max_sessions
-            );
+            anyhow::bail!("Maximum sessions ({}) reached", inner.max_sessions);
         }
 
         let now = now_ms();
@@ -61,7 +58,9 @@ impl BridgeSessionManager {
             last_activity_ms: now,
         };
 
-        inner.sessions.insert(session.session_id.clone(), session.clone());
+        inner
+            .sessions
+            .insert(session.session_id.clone(), session.clone());
         Ok(session)
     }
 

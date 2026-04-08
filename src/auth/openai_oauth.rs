@@ -16,7 +16,7 @@ use tokio::net::TcpListener;
 
 // Re-export for external use (used by main.rs)
 #[allow(unused_imports)]
-pub use crate::auth::oauth_common::{generate_pkce_state, PkceState};
+pub use crate::auth::oauth_common::{PkceState, generate_pkce_state};
 
 pub const OPENAI_OAUTH_CLIENT_ID: &str = "app_EMoamEEZ73f0CkXaXp7hrann";
 pub const OPENAI_OAUTH_AUTHORIZE_URL: &str = "https://auth.openai.com/oauth/authorize";
@@ -258,8 +258,7 @@ pub async fn receive_loopback_code(expected_state: &str, timeout: Duration) -> R
 
     let code = parse_code_from_redirect(path, Some(expected_state))?;
 
-    let body =
-        "<html><body><h2>SenAgentOS login complete</h2><p>You can close this tab.</p></body></html>";
+    let body = "<html><body><h2>SenAgentOS login complete</h2><p>You can close this tab.</p></body></html>";
     let response = format!(
         "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
         body.len(),
@@ -422,9 +421,10 @@ mod tests {
             Some("xyz"),
         )
         .unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("OpenAI OAuth error: access_denied"));
+        assert!(
+            err.to_string()
+                .contains("OpenAI OAuth error: access_denied")
+        );
     }
 
     #[test]

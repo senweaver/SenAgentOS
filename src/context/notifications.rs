@@ -74,7 +74,12 @@ impl NotificationContext {
     /// Get unread notifications.
     pub async fn unread(&self) -> Vec<NotificationEntry> {
         let inner = self.inner.read().await;
-        inner.entries.iter().filter(|e| !e.read && !e.dismissed).cloned().collect()
+        inner
+            .entries
+            .iter()
+            .filter(|e| !e.read && !e.dismissed)
+            .cloned()
+            .collect()
     }
 
     /// Mark a notification as read.
@@ -102,7 +107,11 @@ impl NotificationContext {
     /// Count of unread notifications.
     pub async fn unread_count(&self) -> usize {
         let inner = self.inner.read().await;
-        inner.entries.iter().filter(|e| !e.read && !e.dismissed).count()
+        inner
+            .entries
+            .iter()
+            .filter(|e| !e.read && !e.dismissed)
+            .count()
     }
 }
 

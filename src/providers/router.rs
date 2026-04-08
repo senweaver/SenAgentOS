@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025-2026 SenAgentOS
 // Licensed under the MIT License.
+use super::Provider;
 use super::traits::{
     ChatMessage, ChatRequest, ChatResponse, StreamChunk, StreamEvent, StreamOptions, StreamResult,
 };
-use super::Provider;
 use crate::config::schema::ModelPricing;
 use async_trait::async_trait;
 use futures_util::stream::BoxStream;
@@ -344,8 +344,8 @@ mod tests {
     use super::*;
     use crate::tools::ToolSpec;
     use futures_util::StreamExt;
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     struct MockProvider {
         calls: Arc<AtomicUsize>,

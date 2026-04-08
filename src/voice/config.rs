@@ -39,6 +39,10 @@ impl Default for VoiceModeConfig {
 impl VoiceModeConfig {
     /// Check if voice mode can be activated on this platform.
     pub fn is_available() -> bool {
-        cfg!(any(target_os = "macos", target_os = "windows", target_os = "linux"))
+        cfg!(any(
+            target_os = "macos",
+            target_os = "windows",
+            target_os = "linux"
+        ))
     }
 }

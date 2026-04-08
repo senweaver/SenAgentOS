@@ -108,8 +108,8 @@ mod tests;
 // Re-exports for convenience
 pub use config::RobotConfig;
 pub use paths::{
-    captures_dir, ensure_dirs, recordings_dir, robot_dir, senagent_root, sounds_dir,
-    tts_cache_dir, voice_models_dir, whisper_models_dir,
+    captures_dir, ensure_dirs, recordings_dir, robot_dir, senagent_root, sounds_dir, tts_cache_dir,
+    voice_models_dir, whisper_models_dir,
 };
 pub use traits::{Tool, ToolResult, ToolSpec};
 

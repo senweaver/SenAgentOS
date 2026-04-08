@@ -10,14 +10,13 @@ use std::sync::LazyLock;
 
 use parking_lot::RwLock;
 
+use super::EventBusHandle;
 use super::types::{
     Event, EventPayload, LifecyclePhase, MemoryOperation, SystemCategory, ToolResultSummary,
 };
-use super::EventBusHandle;
 
 /// Global event bus instance, lazily initialized.
-static GLOBAL_BUS: LazyLock<RwLock<Option<EventBusHandle>>> =
-    LazyLock::new(|| RwLock::new(None));
+static GLOBAL_BUS: LazyLock<RwLock<Option<EventBusHandle>>> = LazyLock::new(|| RwLock::new(None));
 
 /// Initialize the global event bus. Call once at startup.
 pub fn init_global_bus() -> EventBusHandle {

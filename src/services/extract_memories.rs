@@ -68,8 +68,15 @@ pub fn extract_from_turn(
 
     // Heuristic 1: Explicit preference statements
     let preference_patterns = [
-        "I prefer", "I like", "I always", "I never", "please always",
-        "please never", "don't use", "always use", "my preferred",
+        "I prefer",
+        "I like",
+        "I always",
+        "I never",
+        "please always",
+        "please never",
+        "don't use",
+        "always use",
+        "my preferred",
     ];
     for pattern in &preference_patterns {
         if let Some(pos) = user_message.to_lowercase().find(&pattern.to_lowercase()) {
@@ -93,12 +100,22 @@ pub fn extract_from_turn(
 
     // Heuristic 2: Convention statements in assistant response
     let convention_patterns = [
-        "convention is", "standard is", "we use", "project uses",
-        "codebase uses", "repo uses",
+        "convention is",
+        "standard is",
+        "we use",
+        "project uses",
+        "codebase uses",
+        "repo uses",
     ];
     for pattern in &convention_patterns {
-        if assistant_response.to_lowercase().contains(&pattern.to_lowercase()) {
-            if let Some(pos) = assistant_response.to_lowercase().find(&pattern.to_lowercase()) {
+        if assistant_response
+            .to_lowercase()
+            .contains(&pattern.to_lowercase())
+        {
+            if let Some(pos) = assistant_response
+                .to_lowercase()
+                .find(&pattern.to_lowercase())
+            {
                 let start = assistant_response[..pos]
                     .rfind(['.', '\n'])
                     .map(|p| p + 1)

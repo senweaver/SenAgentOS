@@ -197,20 +197,16 @@ impl DriveBackend for GpioDrive {
 
         // --- Left motor (forward/back) ---
         let left_pwm = Pwm::with_period(
-            rppal::gpio::pin::OutputPin::new(
-                Gpio::new()?.get(18)?.into_output(),
-            ),
-            20_000,   // 20 kHz PWM frequency
-            0.0,      // duty cycle set below
+            rppal::gpio::pin::OutputPin::new(Gpio::new()?.get(18)?.into_output()),
+            20_000, // 20 kHz PWM frequency
+            0.0,    // duty cycle set below
             rppal::pwm::Polarity::High,
             false,
         )?;
 
         // --- Right motor (forward/back) ---
         let right_pwm = Pwm::with_period(
-            rppal::gpio::pin::OutputPin::new(
-                Gpio::new()?.get(19)?.into_output(),
-            ),
+            rppal::gpio::pin::OutputPin::new(Gpio::new()?.get(19)?.into_output()),
             20_000,
             0.0,
             rppal::pwm::Polarity::High,

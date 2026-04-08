@@ -6,11 +6,11 @@
 //! Analyzes feedback patterns and generates prompt adjustments that
 //! improve response quality over time.
 
+use parking_lot::RwLock;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
-use parking_lot::RwLock;
 
 /// Configuration for the adaptive prompt optimizer.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -32,10 +32,18 @@ pub struct PromptOptimizerConfig {
     pub max_chars: usize,
 }
 
-fn default_min_samples() -> usize { 5 }
-fn default_optimization_threshold() -> f64 { 0.3 }
-fn default_max_additions() -> usize { 5 }
-fn default_max_chars() -> usize { 1200 }
+fn default_min_samples() -> usize {
+    5
+}
+fn default_optimization_threshold() -> f64 {
+    0.3
+}
+fn default_max_additions() -> usize {
+    5
+}
+fn default_max_chars() -> usize {
+    1200
+}
 
 impl Default for PromptOptimizerConfig {
     fn default() -> Self {
@@ -82,10 +90,9 @@ impl CategoryPerformance {
             return false;
         }
         let mid = self.recent_rewards.len() / 2;
-        let first_half: f64 =
-            self.recent_rewards.iter().take(mid).sum::<f64>() / mid as f64;
-        let second_half: f64 =
-            self.recent_rewards.iter().skip(mid).sum::<f64>() / (self.recent_rewards.len() - mid) as f64;
+        let first_half: f64 = self.recent_rewards.iter().take(mid).sum::<f64>() / mid as f64;
+        let second_half: f64 = self.recent_rewards.iter().skip(mid).sum::<f64>()
+            / (self.recent_rewards.len() - mid) as f64;
         second_half > first_half
     }
 }

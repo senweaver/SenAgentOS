@@ -3,8 +3,8 @@
 // Licensed under the MIT License.
 use super::traits::{Tool, ToolResult};
 use crate::runtime::RuntimeAdapter;
-use crate::security::traits::Sandbox;
 use crate::security::SecurityPolicy;
+use crate::security::traits::Sandbox;
 use async_trait::async_trait;
 use serde_json::json;
 use std::collections::HashSet;
@@ -302,10 +302,12 @@ mod tests {
         let tool = ShellTool::new(test_security(AutonomyLevel::Supervised), test_runtime());
         let schema = tool.parameters_schema();
         assert!(schema["properties"]["command"].is_object());
-        assert!(schema["required"]
-            .as_array()
-            .expect("schema required field should be an array")
-            .contains(&json!("command")));
+        assert!(
+            schema["required"]
+                .as_array()
+                .expect("schema required field should be an array")
+                .contains(&json!("command"))
+        );
         assert!(schema["properties"]["approved"].is_object());
     }
 
@@ -341,11 +343,13 @@ mod tests {
             .await
             .expect("readonly command execution should return a result");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_ref()
-            .expect("error field should be present for blocked command")
-            .contains("not allowed"));
+        assert!(
+            result
+                .error
+                .as_ref()
+                .expect("error field should be present for blocked command")
+                .contains("not allowed")
+        );
     }
 
     #[tokio::test]
@@ -381,11 +385,13 @@ mod tests {
             .await
             .expect("absolute path argument should be blocked");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("Path blocked"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("Path blocked")
+        );
     }
 
     #[tokio::test]
@@ -396,11 +402,13 @@ mod tests {
             .await
             .expect("option-assigned forbidden path should be blocked");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("Path blocked"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("Path blocked")
+        );
     }
 
     #[tokio::test]
@@ -411,11 +419,13 @@ mod tests {
             .await
             .expect("short option attached forbidden path should be blocked");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("Path blocked"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("Path blocked")
+        );
     }
 
     #[tokio::test]
@@ -426,11 +436,13 @@ mod tests {
             .await
             .expect("tilde-user path should be blocked");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("Path blocked"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("Path blocked")
+        );
     }
 
     #[tokio::test]
@@ -441,11 +453,13 @@ mod tests {
             .await
             .expect("input redirection bypass should be blocked");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("not allowed"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("not allowed")
+        );
     }
 
     fn test_security_with_env_cmd() -> Arc<SecurityPolicy> {
@@ -539,11 +553,13 @@ mod tests {
             .await
             .expect("plain variable expansion should be blocked");
         assert!(!result.success);
-        assert!(result
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("not allowed"));
+        assert!(
+            result
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("not allowed")
+        );
     }
 
     #[tokio::test(flavor = "current_thread")]
@@ -559,9 +575,11 @@ mod tests {
             .await
             .expect("env command execution should succeed");
         assert!(result.success);
-        assert!(result
-            .output
-            .contains("SENAGENTOS_TEST_PASSTHROUGH=db://unit-test"));
+        assert!(
+            result
+                .output
+                .contains("SENAGENTOS_TEST_PASSTHROUGH=db://unit-test")
+        );
     }
 
     #[test]
@@ -597,11 +615,13 @@ mod tests {
             .await
             .expect("unapproved command should return a result");
         assert!(!denied.success);
-        assert!(denied
-            .error
-            .as_deref()
-            .unwrap_or("")
-            .contains("explicit approval"));
+        assert!(
+            denied
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("explicit approval")
+        );
 
         let allowed = tool
             .execute(json!({

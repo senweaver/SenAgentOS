@@ -54,7 +54,7 @@
 //! // }
 //! ```
 //!
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use std::collections::{HashMap, HashSet};
 
 /// Keywords that Gemini rejects for tool schemas.
@@ -746,12 +746,16 @@ mod tests {
 
         let cleaned = SchemaCleanr::clean_for_gemini(schema);
 
-        assert!(cleaned["properties"]["user"]["properties"]["name"]
-            .get("minLength")
-            .is_none());
-        assert!(cleaned["properties"]["user"]
-            .get("additionalProperties")
-            .is_none());
+        assert!(
+            cleaned["properties"]["user"]["properties"]["name"]
+                .get("minLength")
+                .is_none()
+        );
+        assert!(
+            cleaned["properties"]["user"]
+                .get("additionalProperties")
+                .is_none()
+        );
     }
 
     #[test]

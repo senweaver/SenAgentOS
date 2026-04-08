@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 use std::time::Duration;
 
-use futures_util::{future::join_all, FutureExt};
+use futures_util::{FutureExt, future::join_all};
 use serde_json::Value;
 use std::panic::AssertUnwindSafe;
 use tracing::info;
@@ -321,8 +321,8 @@ impl HookRunner {
 mod tests {
     use super::*;
     use async_trait::async_trait;
-    use std::sync::atomic::{AtomicU32, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicU32, Ordering};
 
     /// A hook that records how many times void events fire.
     struct CountingHook {
